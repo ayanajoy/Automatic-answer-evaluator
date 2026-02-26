@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Automatic Answer Checker</title>
+    <style>
+        body {
+            font-family: Arial;
+            padding: 40px;
+            background-color: #f4f6f9;
+        }
+
+        textarea {
+            width: 100%;
+            height: 120px;
+            margin-bottom: 15px;
+        }
+
+        input {
+            margin-bottom: 15px;
+        }
+
+        button {
+            padding: 10px 20px;
+            cursor: pointer;
+        }
+
+        .result {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+
+        table {
+            margin-top: 30px;
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        th, td {
+            border: 1px solid #ccc;
+            padding: 8px;
+        }
+
+        th {
+            background-color: #eee;
+        }
+    </style>
+</head>
+<body>
+
+<h2>Automatic Answer Checker</h2>
+
+<label>Model Answer:</label>
+<textarea id="modelAnswer"></textarea>
+
+<label>Student Answer:</label>
+<textarea id="studentAnswer"></textarea>
+
+<label>Total Marks:</label>
+<input type="number" id="totalMarks" value="10"/>
+
+<br>
+<button onclick="evaluateAnswer()">Evaluate</button>
+<button onclick="loadResults()">View Stored Results</button>
+
+<div class="result" id="result"></div>
+
+<table id="resultsTable" style="display:none;">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Similarity</th>
+            <th>Marks</th>
+            <th>Total Marks</th>
+            <th>Timestamp</th>
+        </tr>
+    </thead>
+    <tbody id="resultsBody"></tbody>
+</table>
+
+<script>
+async function evaluateAnswer() {
+    const modelAnswer = document.getElementById("modelAnswer").value;
+    const studentAnswer = document.getElementById("studentAnswer").value;
+    const totalMarks = parseFloat(document.getElementById("totalMarks").value);
+
+    const response = await fetch("http://127.0.0.1:8000/evaluate", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            model_answer: modelAnswer,
+            student_answer: studentAnswer,
+            total_marks: totalMarks
+        })
+    });
+
+    const data = await response.json();
+
+    document.getElementById("result").innerHTML =
+        "Similarity: " + data.similarity +
+        "<br>Marks: " + data.marks + " / " + data.total_marks;
+}
+
+async function loadResults() {
+    const response = await fetch("http://127.0.0.1:8000/results");
+    const data = await response.json();
+
+    const table = document.getElementById("resultsTable");
+    const body = document.getElementById("resultsBody");
+
+    body.innerHTML = "";
+
+    data.forEach(result => {
+        body.innerHTML += `
+            <tr>
+                <td>${result.id}</td>
+                <td>${result.similarity.toFixed(4)}</td>
+                <td>${result.marks}</td>
+                <td>${result.total_marks}</td>
+                <td>${result.timestamp}</td>
+            </tr>
+        `;
+    });
+
+    table.style.display = "table";
+}
+</script>
+
+</body>
+</html>
