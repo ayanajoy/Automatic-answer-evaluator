@@ -187,20 +187,39 @@ async function loadPapers() {
     body.innerHTML = "";
 
     papers.forEach(paper => {
-        body.innerHTML += `
-            <tr>
-                <td>${paper[0]}</td>
-                <td>${paper[1]}</td>
-                <td>${paper[2]}</td>
-                <td>${paper[3]}</td>
-                <td>${paper[4]}</td>
-            </tr>
-        `;
-    });
+    body.innerHTML += `
+        <tr>
+            <td>${paper[0]}</td>
+            <td>${paper[1]}</td>
+            <td>${paper[2]}</td>
+            <td>${paper[3]}</td>
+            <td>${paper[4]}</td>
+            <td>
+                <button onclick="deletePaper(${paper[0]})" style="background:red;">
+                    Delete
+                </button>
+            </td>
+        </tr>
+    `;
+});
 
     table.style.display = "table";
 }
+async function deletePaper(paperId) {
 
+    if (!confirm("Are you sure you want to delete this paper?")) {
+        return;
+    }
+
+    const response = await fetch(`/teacher/delete-paper/${paperId}`, {
+        method: "DELETE"
+    });
+
+    const data = await response.json();
+    alert(data.message);
+
+    loadPapers(); // refresh table
+}
 </script>
 
 </body>

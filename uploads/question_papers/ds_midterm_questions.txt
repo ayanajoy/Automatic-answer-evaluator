@@ -1,5 +1,8 @@
-Q1. Explain Binary Tree. (10 Marks)
+DATA STRUCTURES – FIRST SERIES EXAM
+Total Marks: 30
 
-Q2. Explain Breadth First Search (BFS). (10 Marks)
+Q1. Define Binary Tree. (10 Marks)
+
+Q2. Explain Breadth First Search. (10 Marks)
 
 Q3. Explain Quick Sort algorithm. (10 Marks)

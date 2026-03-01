@@ -3,39 +3,10 @@
 <head>
     <title>Student Portal</title>
     <style>
-        body {
-            font-family: Arial;
-            padding: 30px;
-            background-color: #f4f6f9;
-        }
-
-        .section {
-            background: white;
-            padding: 20px;
-            margin-bottom: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-
-        input, select, textarea {
-            width: 100%;
-            padding: 8px;
-            margin-bottom: 10px;
-        }
-
-        button {
-            padding: 10px 20px;
-            cursor: pointer;
-            background-color: #28a745;
-            color: white;
-            border: none;
-        }
-
-        iframe {
-            width: 100%;
-            height: 500px;
-            border: 1px solid #ccc;
-        }
+        body { font-family: Arial; padding: 30px; background: #f4f6f9; }
+        .section { background: white; padding: 20px; margin-bottom: 20px; border-radius: 8px; }
+        textarea { width: 100%; height: 100px; margin-bottom: 10px; }
+        button { padding: 10px 20px; background: green; color: white; border: none; }
     </style>
 </head>
 <body>
@@ -43,34 +14,23 @@
 <h2>Student Portal</h2>
 
 <div class="section">
-    <h3>Select Paper</h3>
     <select id="paperSelect"></select>
     <button onclick="loadPapers()">Load Papers</button>
-    <button onclick="showPaper()">Show Paper</button>
+    <button onclick="loadQuestions()">Start Exam</button>
 </div>
 
 <div class="section">
-    <h3>Question Paper</h3>
-    <div id="paperDisplay"></div>
-</div>
-
-<div class="section">
-    <h3>Submit Answer</h3>
-
     <input type="number" id="studentId" placeholder="Student ID">
-    <input type="number" id="questionNumber" placeholder="Question Number">
-    <input type="number" id="totalMarks" placeholder="Marks for this Question">
+    <div id="questionsContainer"></div>
 
-    <h4>Type Answer</h4>
-    <textarea id="typedAnswer" placeholder="Write your answer here..."></textarea>
+    <h4>OR Upload Full Answer Sheet (PDF or DOCX)</h4>
+    <input type="file" id="answerFile" accept=".pdf,.docx">
 
-    <h4>OR Upload Answer File</h4>
-    <input type="file" id="answerFile">
-
-    <button onclick="submitAnswer()">Submit</button>
-
-    <div id="result"></div>
+    <br><br>
+    <button onclick="submitPaper()">Submit Paper</button>
 </div>
+
+<div id="result"></div>
 
 <script>
 
@@ -82,53 +42,88 @@ async function loadPapers() {
     select.innerHTML = "";
 
     papers.forEach(paper => {
-        select.innerHTML += 
-        `<option value="${paper[0]}">${paper[2]} (${paper[1]})</option>`;
+        select.innerHTML += `<option value="${paper[0]}">${paper[2]}</option>`;
     });
 }
 
-async function showPaper() {
+async function loadQuestions() {
     const paperId = document.getElementById("paperSelect").value;
+    const response = await fetch(`/student/paper/${paperId}/questions`);
+    const questions = await response.json();
 
-    const response = await fetch(`/student/paper/${paperId}`);
-    const data = await response.json();
+    const container = document.getElementById("questionsContainer");
+    container.innerHTML = "";
 
-    document.getElementById("paperDisplay").innerHTML =
-        `<h4>${data.exam_title}</h4>
-         <iframe src="/${data.file_path}"></iframe>`;
+    questions.forEach(q => {
+        container.innerHTML += `
+            <h4>Q${q.question_number} (${q.marks} Marks)</h4>
+            <textarea id="q${q.question_number}"></textarea>
+        `;
+    });
 }
 
-async function submitAnswer() {
+async function submitPaper() {
+
     const studentId = document.getElementById("studentId").value;
     const paperId = document.getElementById("paperSelect").value;
-    const questionNumber = document.getElementById("questionNumber").value;
-    const totalMarks = document.getElementById("totalMarks").value;
-    const typedAnswer = document.getElementById("typedAnswer").value;
     const file = document.getElementById("answerFile").files[0];
 
     let formData = new FormData();
     formData.append("student_id", studentId);
     formData.append("paper_id", paperId);
-    formData.append("question_number", questionNumber);
-    formData.append("total_marks", totalMarks);
-    formData.append("student_answer", typedAnswer);
 
     if (file) {
         formData.append("file", file);
+    } else {
+        let answers = {};
+        document.querySelectorAll("textarea").forEach(area => {
+            const qNo = area.id.replace("q", "");
+            answers[qNo] = area.value;
+        });
+        formData.append("answers", JSON.stringify(answers));
     }
 
-    const response = await fetch("/student/submit", {
-        method: "POST",
-        body: formData
-    });
+    try {
+        const response = await fetch("/student/submit-paper", {
+            method: "POST",
+            body: formData
+        });
 
-    const data = await response.json();
+        const data = await response.json();
 
-    document.getElementById("result").innerHTML =
-        "Similarity: " + data.similarity +
-        "<br>Marks Awarded: " + data.marks_awarded;
+        console.log("Server Response:", data);  // 🔎 DEBUG
+
+        // If backend returned error
+        if (data.error) {
+            document.getElementById("result").innerHTML =
+                `<p style="color:red;">${data.error}</p>`;
+            return;
+        }
+
+        // If details missing
+        if (!data.details) {
+            document.getElementById("result").innerHTML =
+                `<p style="color:red;">Unexpected response from server.</p>`;
+            return;
+        }
+
+        let resultHTML = `<h3>Total: ${data.total_obtained} / ${data.total_marks}</h3>`;
+
+        data.details.forEach(d => {
+            resultHTML += `
+                <p>Q${d.question} - ${d.marks_awarded}/${d.max_marks}
+                (Similarity: ${d.similarity})</p>
+            `;
+        });
+
+        document.getElementById("result").innerHTML = resultHTML;
+
+    } catch (error) {
+        console.error(error);
+        document.getElementById("result").innerHTML =
+            `<p style="color:red;">Submission failed. Check console.</p>`;
+    }
 }
-
 </script>
 
 </body>

@@ -1,6 +1,7 @@
 from fastapi import APIRouter, UploadFile, File, Form
 import shutil
 import os
+from database import delete_question_paper
 from database import (
     add_question_paper,
     get_all_question_papers,
@@ -91,3 +92,8 @@ def get_submissions(paper_id: int):
 @router.get("/all-submissions")
 def get_all():
     return get_all_submissions()
+
+@router.delete("/delete-paper/{paper_id}")
+def delete_paper(paper_id: int):
+    delete_question_paper(paper_id)
+    return {"message": "Paper deleted successfully"}
