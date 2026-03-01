@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Teacher Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 30px;
+            background-color: #f4f6f9;
+        }
+
+        h2 {
+            margin-bottom: 20px;
+        }
+
+        .section {
+            background: white;
+            padding: 20px;
+            margin-bottom: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        input, select, textarea {
+            display: block;
+            margin-bottom: 15px;
+            padding: 8px;
+            width: 100%;
+        }
+
+        button {
+            padding: 10px 20px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th, td {
+            border: 1px solid #ccc;
+            padding: 8px;
+        }
+
+        th {
+            background-color: #eee;
+        }
+
+        .success {
+            color: green;
+            margin-top: 10px;
+        }
+
+        .note {
+            font-size: 14px;
+            color: #555;
+            background: #f9f9f9;
+            padding: 10px;
+            border-left: 4px solid #007bff;
+        }
+    </style>
+</head>
+<body>
+
+<h2>Teacher Dashboard</h2>
+
+<!-- ========================= -->
+<!-- Upload Question Paper -->
+<!-- ========================= -->
+<div class="section">
+    <h3>Upload Question Paper</h3>
+
+    <input type="text" id="subject" placeholder="Subject Name" required>
+    <input type="text" id="examTitle" placeholder="Exam Title" required>
+    <input type="number" id="totalMarks" placeholder="Total Marks" required>
+    <input type="file" id="questionFile" required>
+
+    <button onclick="uploadPaper()">Upload Paper</button>
+    <div id="paperMessage" class="success"></div>
+</div>
+
+<!-- ========================= -->
+<!-- Upload Answer Scheme (.txt only) -->
+<!-- ========================= -->
+<div class="section">
+    <h3>Upload Answer Scheme (.txt only)</h3>
+
+    <div class="note">
+        <b>Format Required:</b><br><br>
+        Q1: Model answer for question 1<br>
+        Q2: Model answer for question 2<br>
+        Q3: Model answer for question 3<br><br>
+        Each question must start with <b>Q<number>:</b>
+    </div>
+
+    <input type="number" id="paperId" placeholder="Paper ID (Check below table)" required>
+    <input type="file" id="schemeFile" accept=".txt" required>
+
+    <button onclick="uploadScheme()">Upload Scheme</button>
+    <div id="schemeMessage" class="success"></div>
+</div>
+
+<!-- ========================= -->
+<!-- View All Papers -->
+<!-- ========================= -->
+<div class="section">
+    <h3>View All Question Papers</h3>
+
+    <button onclick="loadPapers()">Load Papers</button>
+
+    <table id="papersTable" style="display:none;">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Subject</th>
+                <th>Exam Title</th>
+                <th>Total Marks</th>
+                <th>File Path</th>
+            </tr>
+        </thead>
+        <tbody id="papersBody"></tbody>
+    </table>
+</div>
+
+<script>
+
+async function uploadPaper() {
+    const subject = document.getElementById("subject").value;
+    const examTitle = document.getElementById("examTitle").value;
+    const totalMarks = document.getElementById("totalMarks").value;
+    const file = document.getElementById("questionFile").files[0];
+
+    let formData = new FormData();
+    formData.append("subject_name", subject);
+    formData.append("exam_title", examTitle);
+    formData.append("total_marks", totalMarks);
+    formData.append("file", file);
+
+    const response = await fetch("/teacher/upload-paper", {
+        method: "POST",
+        body: formData
+    });
+
+    const data = await response.json();
+    document.getElementById("paperMessage").innerText = data.message;
+}
+
+async function uploadScheme() {
+    const paperId = document.getElementById("paperId").value;
+    const file = document.getElementById("schemeFile").files[0];
+
+    if (!file.name.endsWith(".txt")) {
+        alert("Answer scheme must be a .txt file");
+        return;
+    }
+
+    let formData = new FormData();
+    formData.append("paper_id", paperId);
+    formData.append("file", file);
+
+    const response = await fetch("/teacher/upload-scheme", {
+        method: "POST",
+        body: formData
+    });
+
+    const data = await response.json();
+    document.getElementById("schemeMessage").innerText = data.message;
+}
+
+async function loadPapers() {
+    const response = await fetch("/teacher/papers");
+    const papers = await response.json();
+
+    const table = document.getElementById("papersTable");
+    const body = document.getElementById("papersBody");
+
+    body.innerHTML = "";
+
+    papers.forEach(paper => {
+        body.innerHTML += `
+            <tr>
+                <td>${paper[0]}</td>
+                <td>${paper[1]}</td>
+                <td>${paper[2]}</td>
+                <td>${paper[3]}</td>
+                <td>${paper[4]}</td>
+            </tr>
+        `;
+    });
+
+    table.style.display = "table";
+}
+
+</script>
+
+</body>
+</html>

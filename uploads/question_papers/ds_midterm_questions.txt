@@ -1,0 +1,5 @@
+Q1. Explain Binary Tree. (10 Marks)
+
+Q2. Explain Breadth First Search (BFS). (10 Marks)
+
+Q3. Explain Quick Sort algorithm. (10 Marks)

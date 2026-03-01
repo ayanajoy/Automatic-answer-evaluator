@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Student Portal</title>
+    <style>
+        body {
+            font-family: Arial;
+            padding: 30px;
+            background-color: #f4f6f9;
+        }
+
+        .section {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+        }
+
+        button {
+            padding: 10px 20px;
+            cursor: pointer;
+            background-color: #28a745;
+            color: white;
+            border: none;
+        }
+
+        iframe {
+            width: 100%;
+            height: 500px;
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+<body>
+
+<h2>Student Portal</h2>
+
+<div class="section">
+    <h3>Select Paper</h3>
+    <select id="paperSelect"></select>
+    <button onclick="loadPapers()">Load Papers</button>
+    <button onclick="showPaper()">Show Paper</button>
+</div>
+
+<div class="section">
+    <h3>Question Paper</h3>
+    <div id="paperDisplay"></div>
+</div>
+
+<div class="section">
+    <h3>Submit Answer</h3>
+
+    <input type="number" id="studentId" placeholder="Student ID">
+    <input type="number" id="questionNumber" placeholder="Question Number">
+    <input type="number" id="totalMarks" placeholder="Marks for this Question">
+
+    <h4>Type Answer</h4>
+    <textarea id="typedAnswer" placeholder="Write your answer here..."></textarea>
+
+    <h4>OR Upload Answer File</h4>
+    <input type="file" id="answerFile">
+
+    <button onclick="submitAnswer()">Submit</button>
+
+    <div id="result"></div>
+</div>
+
+<script>
+
+async function loadPapers() {
+    const response = await fetch("/student/papers");
+    const papers = await response.json();
+
+    const select = document.getElementById("paperSelect");
+    select.innerHTML = "";
+
+    papers.forEach(paper => {
+        select.innerHTML += 
+        `<option value="${paper[0]}">${paper[2]} (${paper[1]})</option>`;
+    });
+}
+
+async function showPaper() {
+    const paperId = document.getElementById("paperSelect").value;
+
+    const response = await fetch(`/student/paper/${paperId}`);
+    const data = await response.json();
+
+    document.getElementById("paperDisplay").innerHTML =
+        `<h4>${data.exam_title}</h4>
+         <iframe src="/${data.file_path}"></iframe>`;
+}
+
+async function submitAnswer() {
+    const studentId = document.getElementById("studentId").value;
+    const paperId = document.getElementById("paperSelect").value;
+    const questionNumber = document.getElementById("questionNumber").value;
+    const totalMarks = document.getElementById("totalMarks").value;
+    const typedAnswer = document.getElementById("typedAnswer").value;
+    const file = document.getElementById("answerFile").files[0];
+
+    let formData = new FormData();
+    formData.append("student_id", studentId);
+    formData.append("paper_id", paperId);
+    formData.append("question_number", questionNumber);
+    formData.append("total_marks", totalMarks);
+    formData.append("student_answer", typedAnswer);
+
+    if (file) {
+        formData.append("file", file);
+    }
+
+    const response = await fetch("/student/submit", {
+        method: "POST",
+        body: formData
+    });
+
+    const data = await response.json();
+
+    document.getElementById("result").innerHTML =
+        "Similarity: " + data.similarity +
+        "<br>Marks Awarded: " + data.marks_awarded;
+}
+
+</script>
+
+</body>
+</html>
