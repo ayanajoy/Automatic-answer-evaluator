@@ -2,134 +2,76 @@
 <html>
 <head>
     <title>Teacher Dashboard</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            padding: 30px;
-            background-color: #f4f6f9;
-        }
-
-        h2 {
-            margin-bottom: 20px;
-        }
-
-        .section {
-            background: white;
-            padding: 20px;
-            margin-bottom: 25px;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-
-        input, select, textarea {
-            display: block;
-            margin-bottom: 15px;
-            padding: 8px;
-            width: 100%;
-        }
-
-        button {
-            padding: 10px 20px;
-            cursor: pointer;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-        }
-
-        button:hover {
-            background-color: #0056b3;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-        }
-
-        th, td {
-            border: 1px solid #ccc;
-            padding: 8px;
-        }
-
-        th {
-            background-color: #eee;
-        }
-
-        .success {
-            color: green;
-            margin-top: 10px;
-        }
-
-        .note {
-            font-size: 14px;
-            color: #555;
-            background: #f9f9f9;
-            padding: 10px;
-            border-left: 4px solid #007bff;
-        }
-    </style>
+    <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
 
-<h2>Teacher Dashboard</h2>
+<!-- ================= NAVBAR ================= -->
+<div class="navbar">
+    <div class="logo">EduAI</div>
 
-<!-- ========================= -->
-<!-- Upload Question Paper -->
-<!-- ========================= -->
-<div class="section">
-    <h3>Upload Question Paper</h3>
-
-    <input type="text" id="subject" placeholder="Subject Name" required>
-    <input type="text" id="examTitle" placeholder="Exam Title" required>
-    <input type="number" id="totalMarks" placeholder="Total Marks" required>
-    <input type="file" id="questionFile" required>
-
-    <button onclick="uploadPaper()">Upload Paper</button>
-    <div id="paperMessage" class="success"></div>
-</div>
-
-<!-- ========================= -->
-<!-- Upload Answer Scheme (.txt only) -->
-<!-- ========================= -->
-<div class="section">
-    <h3>Upload Answer Scheme (.txt only)</h3>
-
-    <div class="note">
-        <b>Format Required:</b><br><br>
-        Q1: Model answer for question 1<br>
-        Q2: Model answer for question 2<br>
-        Q3: Model answer for question 3<br><br>
-        Each question must start with <b>Q<number>:</b>
+    <div class="nav-links">
+        <a href="/static/teacher.html" class="active">Dashboard</a>
+        <a href="#upload-paper">Upload Paper</a>
+        <a href="#upload-scheme">Upload Scheme</a>
+        <a href="#view-papers">View Papers</a>
     </div>
 
-    <input type="number" id="paperId" placeholder="Paper ID (Check below table)" required>
-    <input type="file" id="schemeFile" accept=".txt" required>
-
-    <button onclick="uploadScheme()">Upload Scheme</button>
-    <div id="schemeMessage" class="success"></div>
+    <div class="profile">👩‍🏫 Teacher</div>
 </div>
 
-<!-- ========================= -->
-<!-- View All Papers -->
-<!-- ========================= -->
-<div class="section">
-    <h3>View All Question Papers</h3>
+<!-- ================= MAIN CONTAINER ================= -->
+<div class="container">
 
-    <button onclick="loadPapers()">Load Papers</button>
+<!-- Upload Paper -->
+<div class="section" id="upload-paper">
+    <h3>Upload Question Paper</h3>
 
-    <table id="papersTable" style="display:none;">
+    <input type="text" id="subject" placeholder="Subject Name">
+    <input type="text" id="examTitle" placeholder="Exam Title">
+    <input type="number" id="totalMarks" placeholder="Total Marks">
+    <input type="file" id="questionFile">
+
+    <button onclick="uploadPaper()">Upload Paper</button>
+    <div id="paperMessage" class="message"></div>
+</div>
+
+<!-- Upload Scheme -->
+<div class="section" id="upload-scheme">
+    <h3>Upload Answer Scheme</h3>
+
+    <div class="info-box">
+        Ensure format: <strong>Q1: Answer</strong>
+    </div>
+
+    <input type="number" id="paperId" placeholder="Paper ID">
+    <input type="file" id="schemeFile" accept=".txt">
+
+    <button onclick="uploadScheme()">Upload Scheme</button>
+    <div id="schemeMessage" class="message"></div>
+</div>
+
+<!-- View Papers -->
+<div class="section" id="view-papers">
+    <h3>Question Papers</h3>
+
+    <button onclick="loadPapers()">Refresh List</button>
+
+    <table id="papersTable">
         <thead>
             <tr>
                 <th>ID</th>
                 <th>Subject</th>
-                <th>Exam Title</th>
-                <th>Total Marks</th>
-                <th>File Path</th>
+                <th>Exam</th>
+                <th>Total</th>
+                <th>File</th>
+                <th>Action</th>
             </tr>
         </thead>
         <tbody id="papersBody"></tbody>
     </table>
+</div>
+
 </div>
 
 <script>
@@ -181,13 +123,11 @@ async function loadPapers() {
     const response = await fetch("/teacher/papers");
     const papers = await response.json();
 
-    const table = document.getElementById("papersTable");
     const body = document.getElementById("papersBody");
-
     body.innerHTML = "";
 
     papers.forEach(paper => {
-    body.innerHTML += `
+        body.innerHTML += `
         <tr>
             <td>${paper[0]}</td>
             <td>${paper[1]}</td>
@@ -195,21 +135,17 @@ async function loadPapers() {
             <td>${paper[3]}</td>
             <td>${paper[4]}</td>
             <td>
-                <button onclick="deletePaper(${paper[0]})" style="background:red;">
+                <button class="danger-btn" onclick="deletePaper(${paper[0]})">
                     Delete
                 </button>
             </td>
         </tr>
-    `;
-});
-
-    table.style.display = "table";
+        `;
+    });
 }
-async function deletePaper(paperId) {
 
-    if (!confirm("Are you sure you want to delete this paper?")) {
-        return;
-    }
+async function deletePaper(paperId) {
+    if (!confirm("Are you sure you want to delete this paper?")) return;
 
     const response = await fetch(`/teacher/delete-paper/${paperId}`, {
         method: "DELETE"
@@ -217,10 +153,48 @@ async function deletePaper(paperId) {
 
     const data = await response.json();
     alert(data.message);
-
-    loadPapers(); // refresh table
+    loadPapers();
 }
-</script>
 
+// ================= TOAST FUNCTION =================
+function showToast(message, type="success") {
+    const container = document.getElementById("toast-container");
+
+    const toast = document.createElement("div");
+    toast.classList.add("toast", type);
+    toast.innerText = message;
+
+    container.appendChild(toast);
+
+    setTimeout(() => {
+        toast.remove();
+    }, 3500);
+}
+
+// ================= SUCCESS MODAL =================
+function showSuccessModal(title, message) {
+    document.getElementById("modalTitle").innerText = title;
+    document.getElementById("modalMessage").innerText = message;
+
+    document.getElementById("successModal").classList.add("show");
+}
+
+function closeModal() {
+    document.getElementById("successModal").classList.remove("show");
+}
+
+</script>
+<!-- ================= TOAST CONTAINER ================= -->
+<div id="toast-container"></div>
+
+<!-- ================= SUCCESS MODAL ================= -->
+<div id="successModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-icon">✔</div>
+        <h3 id="modalTitle">Success!</h3>
+        <p id="modalMessage">Action completed successfully.</p>
+        <button onclick="closeModal()">Close</button>
+    </div>
+</div>
 </body>
 </html>

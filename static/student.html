@@ -2,52 +2,134 @@
 <html>
 <head>
     <title>Student Portal</title>
-    <style>
-        body { font-family: Arial; padding: 30px; background: #f4f6f9; }
-        .section { background: white; padding: 20px; margin-bottom: 20px; border-radius: 8px; }
-        textarea { width: 100%; height: 100px; margin-bottom: 10px; }
-        button { padding: 10px 20px; background: green; color: white; border: none; }
-    </style>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 </head>
 <body>
 
-<h2>Student Portal</h2>
+<!-- ================= NAVBAR ================= -->
+<div class="navbar">
+    <div class="logo">EduAI</div>
 
-<div class="section">
-    <select id="paperSelect"></select>
-    <button onclick="loadPapers()">Load Papers</button>
-    <button onclick="loadQuestions()">Start Exam</button>
+    <div class="nav-links">
+        <a href="/static/student.html" class="active">Dashboard</a>
+        <a href="#exam-section">Exams</a>
+        <a href="#result">Results</a>
+    </div>
+
+    <div class="profile">🎓 Student</div>
 </div>
 
-<div class="section">
-    <input type="number" id="studentId" placeholder="Student ID">
-    <div id="questionsContainer"></div>
+<!-- ================= MAIN CONTAINER ================= -->
+<div class="container">
 
-    <h4>OR Upload Full Answer Sheet (PDF or DOCX)</h4>
-    <input type="file" id="answerFile" accept=".pdf,.docx">
+<!-- ================= EXAM SELECTION ================= -->
+<div class="section fade-in">
+    <h3>Choose Your Exam</h3>
 
-    <br><br>
-    <button onclick="submitPaper()">Submit Paper</button>
+    <div class="grid-2">
+        <div>
+            <label>Subject</label>
+            <select id="subjectSelect"></select>
+        </div>
+
+        <div>
+            <label>Exam</label>
+            <select id="paperSelect"></select>
+        </div>
+    </div>
+
+    <div class="button-group">
+        <button onclick="loadSubjects()">Load Subjects</button>
+        <button onclick="loadQuestions()">Start Exam</button>
+    </div>
 </div>
 
+<!-- ================= EXAM SECTION ================= -->
+<div class="section fade-in" id="exam-section">
+    <h3>Answer Sheet</h3>
+
+    <input type="number" id="studentId" placeholder="Enter Student ID">
+
+    <!-- Toggle -->
+    <div class="toggle-wrapper">
+        <button id="typeBtn" class="toggle-btn active" onclick="showTyping()">Type Answers</button>
+        <button id="uploadBtn" class="toggle-btn" onclick="showUpload()">Upload File</button>
+    </div>
+
+    <!-- Typing Area -->
+    <div id="typingSection">
+        <div id="questionsContainer" class="questions">
+            <div class="placeholder">
+                Click "Start Exam" to load questions.
+            </div>
+        </div>
+    </div>
+
+    <!-- Upload Area -->
+    <div id="uploadSection" style="display:none;">
+        <div class="upload-box">
+            <p>Upload Full Answer Sheet (PDF / DOCX)</p>
+            <input type="file" id="answerFile" accept=".pdf,.docx">
+        </div>
+    </div>
+
+    <button class="primary-btn" onclick="submitPaper()">Submit Paper</button>
+</div>
+
+<!-- Evaluation Loader -->
+<div id="evaluationLoader" class="loader-overlay">
+    <div class="loader-box">
+        <h3>Evaluating Answers...</h3>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <p id="progressText">0%</p>
+    </div>
+</div>
+
+<!-- ================= RESULT SECTION ================= -->
 <div id="result"></div>
+
+</div>
 
 <script>
 
-async function loadPapers() {
+async function loadSubjects() {
     const response = await fetch("/student/papers");
     const papers = await response.json();
 
-    const select = document.getElementById("paperSelect");
-    select.innerHTML = "";
+    const subjectSelect = document.getElementById("subjectSelect");
+    subjectSelect.innerHTML = "";
+
+    let subjects = [...new Set(papers.map(p => p[1]))];
+
+    subjects.forEach(sub => {
+        subjectSelect.innerHTML += `<option value="${sub}">${sub}</option>`;
+    });
+
+    loadPapersBySubject(papers);
+}
+
+function loadPapersBySubject(papers) {
+    const selectedSubject = document.getElementById("subjectSelect").value;
+    const paperSelect = document.getElementById("paperSelect");
+    paperSelect.innerHTML = "";
 
     papers.forEach(paper => {
-        select.innerHTML += `<option value="${paper[0]}">${paper[2]}</option>`;
+        if (paper[1] === selectedSubject) {
+            paperSelect.innerHTML +=
+                `<option value="${paper[0]}">${paper[2]}</option>`;
+        }
     });
 }
 
 async function loadQuestions() {
     const paperId = document.getElementById("paperSelect").value;
+
     const response = await fetch(`/student/paper/${paperId}/questions`);
     const questions = await response.json();
 
@@ -56,17 +138,24 @@ async function loadQuestions() {
 
     questions.forEach(q => {
         container.innerHTML += `
-            <h4>Q${q.question_number} (${q.marks} Marks)</h4>
-            <textarea id="q${q.question_number}"></textarea>
+            <div class="question-card">
+                <h4>Q${q.question_number} (${q.marks} Marks)</h4>
+                <textarea id="q${q.question_number}"></textarea>
+            </div>
         `;
     });
+
+    document.getElementById("exam-section").scrollIntoView({behavior: "smooth"});
 }
 
 async function submitPaper() {
 
+    showLoader();
+
     const studentId = document.getElementById("studentId").value;
     const paperId = document.getElementById("paperSelect").value;
-    const file = document.getElementById("answerFile").files[0];
+    const isUpload = document.getElementById("uploadSection").style.display === "block";
+    const file = isUpload ? document.getElementById("answerFile").files[0] : null;
 
     let formData = new FormData();
     formData.append("student_id", studentId);
@@ -91,40 +180,164 @@ async function submitPaper() {
 
         const data = await response.json();
 
-        console.log("Server Response:", data);  // 🔎 DEBUG
+        hideLoader();
 
-        // If backend returned error
         if (data.error) {
             document.getElementById("result").innerHTML =
-                `<p style="color:red;">${data.error}</p>`;
+                `<div class="error-box">${data.error}</div>`;
             return;
         }
 
-        // If details missing
-        if (!data.details) {
-            document.getElementById("result").innerHTML =
-                `<p style="color:red;">Unexpected response from server.</p>`;
-            return;
-        }
+        let percentage = Math.round(
+            (data.total_obtained / data.total_marks) * 100
+        );
 
-        let resultHTML = `<h3>Total: ${data.total_obtained} / ${data.total_marks}</h3>`;
+        let resultHTML = `
+        <div class="result-card fade-in">
+            <div class="result-header">
+                <h3>Exam Result</h3>
+                <div class="score-badge">${percentage}%</div>
+            </div>
+
+            <div class="chart-wrapper">
+    <canvas id="scoreChart"></canvas>
+    <div class="chart-center">
+        ${percentage}%
+    </div>
+</div>
+
+            <div class="result-details">
+        `;
 
         data.details.forEach(d => {
             resultHTML += `
-                <p>Q${d.question} - ${d.marks_awarded}/${d.max_marks}
-                (Similarity: ${d.similarity})</p>
+                <div class="result-item">
+                    <span>Q${d.question}</span>
+                    <span>${d.marks_awarded}/${d.max_marks}</span>
+                </div>
             `;
         });
 
+        resultHTML += `
+            </div>
+        </div>
+        `;
+
         document.getElementById("result").innerHTML = resultHTML;
 
+        document.getElementById("result").scrollIntoView({behavior: "smooth"});
+
+        // Draw chart
+        const ctx = document.getElementById("scoreChart");
+
+        new Chart(ctx, {
+            type: "doughnut",
+            data: {
+                datasets: [{
+                    data: [percentage, 100 - percentage],
+                    backgroundColor: ["#22c55e", "#1e293b"],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                cutout: "75%",
+                plugins: { legend: { display: false } }
+            }
+        });
+
+        // 🎉 Confetti for high score
+        if (percentage >= 75) {
+            confetti({
+                particleCount: 150,
+                spread: 70,
+                origin: { y: 0.6 }
+            });
+        }
+
     } catch (error) {
-        console.error(error);
+        hideLoader();
         document.getElementById("result").innerHTML =
-            `<p style="color:red;">Submission failed. Check console.</p>`;
+            `<div class="error-box">Submission failed.</div>`;
     }
 }
-</script>
 
+// ================= TOAST FUNCTION =================
+function showToast(message, type="success") {
+    const container = document.getElementById("toast-container");
+
+    const toast = document.createElement("div");
+    toast.classList.add("toast", type);
+    toast.innerText = message;
+
+    container.appendChild(toast);
+
+    setTimeout(() => {
+        toast.remove();
+    }, 3500);
+}
+
+// ================= SUCCESS MODAL =================
+function showSuccessModal(title, message) {
+    document.getElementById("modalTitle").innerText = title;
+    document.getElementById("modalMessage").innerText = message;
+
+    document.getElementById("successModal").classList.add("show");
+}
+
+function closeModal() {
+    document.getElementById("successModal").classList.remove("show");
+}
+
+function showTyping() {
+    document.getElementById("typingSection").style.display = "block";
+    document.getElementById("uploadSection").style.display = "none";
+
+    document.getElementById("typeBtn").classList.add("active");
+    document.getElementById("uploadBtn").classList.remove("active");
+}
+
+function showUpload() {
+    document.getElementById("typingSection").style.display = "none";
+    document.getElementById("uploadSection").style.display = "block";
+
+    document.getElementById("uploadBtn").classList.add("active");
+    document.getElementById("typeBtn").classList.remove("active");
+}
+
+function showLoader() {
+    const loader = document.getElementById("evaluationLoader");
+    const fill = document.getElementById("progressFill");
+    const text = document.getElementById("progressText");
+
+    loader.style.display = "flex";
+
+    let progress = 0;
+    const interval = setInterval(() => {
+        progress += 5;
+        fill.style.width = progress + "%";
+        text.innerText = progress + "%";
+
+        if (progress >= 100) {
+            clearInterval(interval);
+        }
+    }, 80);
+}
+
+function hideLoader() {
+    document.getElementById("evaluationLoader").style.display = "none";
+}
+</script>
+<!-- ================= TOAST CONTAINER ================= -->
+<div id="toast-container"></div>
+
+<!-- ================= SUCCESS MODAL ================= -->
+<div id="successModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-icon">✔</div>
+        <h3 id="modalTitle">Success!</h3>
+        <p id="modalMessage">Action completed successfully.</p>
+        <button onclick="closeModal()">Close</button>
+    </div>
+</div>
 </body>
 </html>
