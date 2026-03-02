@@ -10,7 +10,7 @@ from database import (
     add_submission
 )
 
-from nlp.similarity import calculate_similarity, calculate_marks
+from nlp.similarity import calculate_marks
 
 router = APIRouter(prefix="/student", tags=["Student"])
 
@@ -159,19 +159,22 @@ async def submit_paper(
 
         student_answer = student_answers.get(str(q_no), "")
 
-        similarity = calculate_similarity(
+        # ✅ Hybrid scoring
+        obtained, breakdown = calculate_marks(
             model_answer.strip(),
-            student_answer
+            student_answer,
+            marks
         )
 
-        obtained = calculate_marks(similarity, marks)
         total_obtained += obtained
 
         detailed_results.append({
             "question": q_no,
-            "similarity": round(similarity, 4),
             "marks_awarded": obtained,
-            "max_marks": marks
+            "max_marks": marks,
+            "semantic_score": breakdown["semantic"],
+            "keyword_score": breakdown["keyword"],
+            "length_score": breakdown["length"]
         })
 
         add_submission(
@@ -179,7 +182,7 @@ async def submit_paper(
             paper_id,
             q_no,
             student_answer,
-            similarity,
+            breakdown["semantic"],   # store semantic similarity
             obtained
         )
 
