@@ -1,6 +1,9 @@
 fastapi
 uvicorn
 sentence-transformers
-scikit-learn
+transformers
+torch>=2.4
 nltk
-python-multipart
+scikit-learn
+pdfplumber
+python-docx

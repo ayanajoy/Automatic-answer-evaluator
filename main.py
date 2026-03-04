@@ -1,22 +1,24 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 
 from routes.teacher_routes import router as teacher_router
 from routes.student_routes import router as student_router
 
 app = FastAPI()
 
-# Include routers
+# ================= ROUTERS =================
 app.include_router(teacher_router)
 app.include_router(student_router)
 
-# Serve static pages
+# ================= STATIC FILES =================
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# Serve uploaded files
+# uploaded question papers / answers
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 
+# ================= HOME PAGE =================
 @app.get("/")
 def home():
-    return {"message": "Automatic Answer Checker API Running"}
+    return FileResponse("static/index.html")

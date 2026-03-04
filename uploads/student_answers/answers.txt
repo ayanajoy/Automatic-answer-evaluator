@@ -1,5 +1,0 @@
-Q1. Binary tree is a hierarchical data structure where each node has at most two children. It is used in searching and sorting algorithms.
-
-Q2. BFS is a traversal method that uses queue and visits nodes level by level.
-
-Q3. Bubble sort is a simple sorting algorithm that repeatedly swaps adjacent elements.

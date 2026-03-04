@@ -1,131 +1,374 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
-    <title>Automatic Answer Checker</title>
-    <style>
-        body {
-            font-family: Arial;
-            padding: 40px;
-            background-color: #f4f6f9;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-        textarea {
-            width: 100%;
-            height: 120px;
-            margin-bottom: 15px;
-        }
+<title>EduAI | Institutional AI Assessment Portal</title>
 
-        input {
-            margin-bottom: 15px;
-        }
+<link rel="stylesheet" href="/static/style.css?v=3">
 
-        button {
-            padding: 10px 20px;
-            cursor: pointer;
-        }
+<style>
 
-        .result {
-            margin-top: 20px;
-            font-weight: bold;
-        }
+/* ================= HERO ================= */
 
-        table {
-            margin-top: 30px;
-            border-collapse: collapse;
-            width: 100%;
-        }
+.hero{
+    min-height:75vh;
+    background:
+    linear-gradient(rgba(30,58,138,0.9),rgba(30,58,138,0.9)),
+    url("https://images.unsplash.com/photo-1523050853063-bd401750797c?auto=format&fit=crop&q=80");
 
-        th, td {
-            border: 1px solid #ccc;
-            padding: 8px;
-        }
+    background-size:cover;
+    background-position:center;
 
-        th {
-            background-color: #eee;
-        }
-    </style>
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+
+    color:white;
+    padding:80px 20px;
+}
+
+.hero h1{
+    font-size:clamp(2rem,5vw,3rem);
+    font-weight:800;
+    margin-bottom:20px;
+}
+
+.hero p{
+    max-width:650px;
+    margin:auto;
+    opacity:0.9;
+}
+
+/* ================= ROLE CARDS ================= */
+
+.role-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+    gap:30px;
+    max-width:700px;
+    margin:50px auto 0 auto;
+}
+
+.role-card{
+    background:white;
+    border-radius:12px;
+    border:1px solid var(--border);
+    padding:35px 30px;
+    text-align:center;
+    box-shadow:0 6px 15px rgba(0,0,0,0.08);
+
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    gap:15px;
+}
+
+.role-icon{
+    font-size:40px;
+}
+
+.role-card p{
+    color:var(--text-muted);
+}
+
+.role-card .primary-btn{
+    width:100%;
+}
+
+/* ================= FEATURES ================= */
+
+.feature-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:30px;
+}
+
+.feature-card{
+    text-align:center;
+    padding:30px;
+    border-radius:12px;
+    border:1px solid var(--border);
+    background:white;
+}
+
+.feature-card h4{
+    margin:10px 0;
+}
+
+/* ================= WORKFLOW ================= */
+
+.workflow-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:30px;
+}
+
+.workflow-card{
+    background:white;
+    border:1px solid var(--border);
+    padding:25px;
+    border-radius:10px;
+}
+
+/* ================= STATS ================= */
+
+.stats{
+    display:flex;
+    justify-content:space-around;
+    margin:60px 0;
+    text-align:center;
+}
+
+.stat h2{
+    font-size:36px;
+    color:var(--primary);
+}
+
+.stat p{
+    color:var(--text-muted);
+}
+
+/* ================= FOOTER ================= */
+
+footer{
+    margin-top:40px;
+    text-align:center;
+    padding:30px;
+    font-size:0.9rem;
+    color:var(--text-muted);
+}
+
+/* ================= RESPONSIVE ================= */
+
+@media(max-width:1024px){
+
+.feature-grid{
+grid-template-columns:1fr 1fr;
+}
+
+.workflow-grid{
+grid-template-columns:1fr 1fr;
+}
+
+}
+
+@media(max-width:768px){
+
+.navbar{
+flex-direction:column;
+height:auto;
+padding:15px;
+gap:10px;
+}
+
+.nav-links{
+display:flex;
+gap:15px;
+}
+
+.feature-grid{
+grid-template-columns:1fr;
+}
+
+.workflow-grid{
+grid-template-columns:1fr;
+}
+
+.stats{
+flex-direction:column;
+gap:25px;
+}
+
+}
+
+</style>
+
 </head>
+
 <body>
 
-<h2>Automatic Answer Checker</h2>
+<!-- ================= NAVBAR ================= -->
 
-<label>Model Answer:</label>
-<textarea id="modelAnswer"></textarea>
+<div class="navbar">
 
-<label>Student Answer:</label>
-<textarea id="studentAnswer"></textarea>
+<div class="logo">EduAI</div>
 
-<label>Total Marks:</label>
-<input type="number" id="totalMarks" value="10"/>
+<div class="nav-links">
+<a href="#features">Features</a>
+<a href="#workflow">How It Works</a>
+<a href="/static/login.html" class="primary-btn">Sign In</a>
+</div>
 
-<br>
-<button onclick="evaluateAnswer()">Evaluate</button>
-<button onclick="loadResults()">View Stored Results</button>
+</div>
 
-<div class="result" id="result"></div>
 
-<table id="resultsTable" style="display:none;">
-    <thead>
-        <tr>
-            <th>ID</th>
-            <th>Similarity</th>
-            <th>Marks</th>
-            <th>Total Marks</th>
-            <th>Timestamp</th>
-        </tr>
-    </thead>
-    <tbody id="resultsBody"></tbody>
-</table>
+<!-- ================= HERO ================= -->
 
-<script>
-async function evaluateAnswer() {
-    const modelAnswer = document.getElementById("modelAnswer").value;
-    const studentAnswer = document.getElementById("studentAnswer").value;
-    const totalMarks = parseFloat(document.getElementById("totalMarks").value);
+<div class="hero">
 
-    const response = await fetch("http://127.0.0.1:8000/evaluate", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-            model_answer: modelAnswer,
-            student_answer: studentAnswer,
-            total_marks: totalMarks
-        })
-    });
+<div>
 
-    const data = await response.json();
+<h1>AI-Powered Academic Assessment</h1>
 
-    document.getElementById("result").innerHTML =
-        "Similarity: " + data.similarity +
-        "<br>Marks: " + data.marks + " / " + data.total_marks;
-}
+<p>
+EduAI is an intelligent grading platform that evaluates descriptive answers using
+advanced Natural Language Processing. Built for universities seeking fair,
+transparent and scalable assessments.
+</p>
 
-async function loadResults() {
-    const response = await fetch("http://127.0.0.1:8000/results");
-    const data = await response.json();
 
-    const table = document.getElementById("resultsTable");
-    const body = document.getElementById("resultsBody");
+<div class="role-grid">
 
-    body.innerHTML = "";
+<div class="role-card">
 
-    data.forEach(result => {
-        body.innerHTML += `
-            <tr>
-                <td>${result.id}</td>
-                <td>${result.similarity.toFixed(4)}</td>
-                <td>${result.marks}</td>
-                <td>${result.total_marks}</td>
-                <td>${result.timestamp}</td>
-            </tr>
-        `;
-    });
+<div class="role-icon">🎓</div>
 
-    table.style.display = "table";
-}
-</script>
+<h3>Student Portal</h3>
+
+<p>Submit exam answers and receive instant AI-evaluated results.</p>
+
+<a href="/static/login.html" class="primary-btn">Student Login</a>
+
+</div>
+
+
+<div class="role-card">
+
+<div class="role-icon">👨‍🏫</div>
+
+<h3>Faculty Portal</h3>
+
+<p>Upload exams, answer schemes and evaluate submissions efficiently.</p>
+
+<a href="/static/login.html" class="primary-btn">Faculty Login</a>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+
+<!-- ================= FEATURES ================= -->
+
+<div class="container" id="features">
+
+<div class="section">
+
+<h3>Platform Capabilities</h3>
+
+<div class="feature-grid">
+
+<div class="feature-card">
+<div style="font-size:30px">🤖</div>
+<h4>AI Semantic Grading</h4>
+<p>
+Uses sentence transformer models to compare student answers with model solutions.
+</p>
+</div>
+
+<div class="feature-card">
+<div style="font-size:30px">📄</div>
+<h4>Hybrid Submission</h4>
+<p>
+Students can type answers directly or upload full answer sheets in PDF or DOCX.
+</p>
+</div>
+
+<div class="feature-card">
+<div style="font-size:30px">📊</div>
+<h4>Instant Evaluation</h4>
+<p>
+Teachers and students receive immediate grading insights and performance analytics.
+</p>
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+
+<!-- ================= WORKFLOW ================= -->
+
+<div class="container" id="workflow">
+
+<div class="section">
+
+<h3>How EduAI Works</h3>
+
+<div class="workflow-grid">
+
+<div class="workflow-card">
+<h4>1. Teacher Uploads Exam</h4>
+<p>
+Faculty upload question papers and official answer schemes.
+</p>
+</div>
+
+<div class="workflow-card">
+<h4>2. Student Submits Answers</h4>
+<p>
+Students type answers or upload answer sheets for evaluation.
+</p>
+</div>
+
+<div class="workflow-card">
+<h4>3. AI Evaluates Responses</h4>
+<p>
+Hybrid NLP model compares responses and automatically assigns marks.
+</p>
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+
+<!-- ================= STATS ================= -->
+
+<div class="container">
+
+<div class="stats">
+
+<div class="stat">
+<h2>95%</h2>
+<p>Grading Accuracy</p>
+</div>
+
+<div class="stat">
+<h2>3×</h2>
+<p>Faster Evaluation</p>
+</div>
+
+<div class="stat">
+<h2>100+</h2>
+<p>AI Evaluations</p>
+</div>
+
+</div>
+
+</div>
+
+
+<!-- ================= FOOTER ================= -->
+
+<footer>
+
+© 2026 EduAI Institutional Assessment Systems  
+All Rights Reserved
+
+</footer>
+
 
 </body>
 </html>

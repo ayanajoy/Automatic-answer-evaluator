@@ -97,3 +97,33 @@ def get_all():
 def delete_paper(paper_id: int):
     delete_question_paper(paper_id)
     return {"message": "Paper deleted successfully"}
+
+@router.get("/scheme/{paper_id}")
+def get_scheme(paper_id: int):
+    from database import get_answer_scheme_by_paper
+    scheme = get_answer_scheme_by_paper(paper_id)
+
+    if not scheme:
+        return {"error": "No scheme found"}
+
+    return {
+        "file_path": scheme[2]
+    }
+
+@router.get("/analytics/{paper_id}")
+def get_paper_analytics(paper_id: int):
+    submissions = get_submissions_by_paper(paper_id)
+    if not submissions:
+        return {"error": "No submissions yet"}
+    
+    # Calculate stats
+    scores = [s[5] for s in submissions] # Assuming index 5 is marks_awarded
+    avg_score = sum(scores) / len(scores)
+    pass_count = len([s for s in scores if s >= (0.4 * 100)]) # Example 40% pass
+    
+    return {
+        "average": round(avg_score, 2),
+        "total_students": len(submissions),
+        "pass_rate": round((pass_count / len(submissions)) * 100, 1),
+        "scores": scores
+    }

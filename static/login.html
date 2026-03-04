@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login | EduAI Assessment</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="auth-wrapper">
+    <div class="auth-card">
+        <div class="logo" style="margin-bottom: 24px; text-align: center;">EduAI</div>
+        <h2 style="font-size: 1.5rem; text-align: center;">Sign In</h2>
+        <p style="color: var(--text-muted); text-align: center; margin-bottom: 32px; font-size: 0.9rem;">Academic Assessment Portal</p>
+
+        <div class="form-group">
+            <label>Educational Role</label>
+            <select id="role">
+                <option value="student">Student</option>
+                <option value="teacher">Teacher / Faculty</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Institutional Email</label>
+            <input type="email" id="email" placeholder="name@university.edu">
+        </div>
+
+        <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="password" placeholder="••••••••">
+        </div>
+
+        <button class="primary-btn" style="width: 100%; margin-top: 10px;" onclick="handleLogin()">Log In to Dashboard</button>
+        
+        <p style="margin-top: 24px; font-size: 0.85rem; text-align: center; color: var(--text-muted);">
+            Don't have an account? <a href="register.html" style="color: var(--primary); font-weight: 600; text-decoration: none;">Register</a>
+        </p>
+    </div>
+
+    <!-- Script remains exactly the same -->
+    <script>
+    function handleLogin() {
+        const role = document.getElementById('role').value;
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        if(!email || !password){ alert("Please enter credentials"); return; }
+        const name = email.split('@')[0];
+        localStorage.setItem('user', JSON.stringify({ name:name, role:role, email:email }));
+        if(role === "teacher"){ window.location.href = "/static/teacher.html"; } 
+        else { window.location.href = "/static/student.html"; }
+    }
+    </script>
+</body>
+</html>

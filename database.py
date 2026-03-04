@@ -119,6 +119,13 @@ def add_answer_scheme(paper_id, answer_file_path):
     conn = get_connection()
     cursor = conn.cursor()
 
+    # 🔥 Delete old scheme for this paper
+    cursor.execute(
+        "DELETE FROM answer_schemes WHERE paper_id = ?",
+        (paper_id,)
+    )
+
+    # Insert new scheme
     cursor.execute("""
     INSERT INTO answer_schemes
     (paper_id, answer_file_path, created_at)
@@ -137,7 +144,12 @@ def get_answer_scheme_by_paper(paper_id):
     conn = get_connection()
     cursor = conn.cursor()
 
-    cursor.execute("SELECT * FROM answer_schemes WHERE paper_id = ?", (paper_id,))
+    cursor.execute("""
+    SELECT * FROM answer_schemes
+    WHERE paper_id = ?
+    ORDER BY created_at DESC
+    LIMIT 1
+""", (paper_id,))
     scheme = cursor.fetchone()
 
     conn.close()

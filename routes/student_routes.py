@@ -115,7 +115,6 @@ async def submit_paper(
         extracted_text = ""
 
         from io import BytesIO
-
         file_content = await file.read()
 
         # PDF
@@ -159,22 +158,21 @@ async def submit_paper(
 
         student_answer = student_answers.get(str(q_no), "")
 
-        # ✅ Hybrid scoring
         obtained, breakdown = calculate_marks(
             model_answer.strip(),
             student_answer,
             marks
         )
 
-        total_obtained += obtained
+        total_obtained += float(obtained)
 
         detailed_results.append({
-            "question": q_no,
-            "marks_awarded": obtained,
-            "max_marks": marks,
-            "semantic_score": breakdown["semantic"],
-            "keyword_score": breakdown["keyword"],
-            "length_score": breakdown["length"]
+            "question": int(q_no),
+            "marks_awarded": float(obtained),
+            "max_marks": int(marks),
+            "semantic_score": float(breakdown["semantic"]),
+            "keyword_score": float(breakdown["keyword"]),
+            "length_score": float(breakdown["length"])
         })
 
         add_submission(
@@ -182,12 +180,37 @@ async def submit_paper(
             paper_id,
             q_no,
             student_answer,
-            breakdown["semantic"],   # store semantic similarity
-            obtained
+            float(breakdown["semantic"]),
+            float(obtained)
         )
 
     return {
-        "total_marks": total_marks,
-        "total_obtained": total_obtained,
+        "total_marks": int(total_marks),
+        "total_obtained": float(total_obtained),
         "details": detailed_results
     }
+
+
+# ============================================
+# GET PAPER DETAILS
+# ============================================
+@router.get("/paper/{paper_id}")
+def get_paper_details(paper_id: int):
+
+    papers = get_all_question_papers()
+
+    for paper in papers:
+        if paper[0] == paper_id:
+
+            scheme = get_answer_scheme_by_paper(paper_id)
+
+            return {
+                "id": paper[0],
+                "subject": paper[1],
+                "exam_title": paper[2],
+                "total_marks": paper[3],
+                "file_path": paper[4],
+                "is_ready": True if scheme else False
+            }
+
+    return {"error": "Paper not found"}
