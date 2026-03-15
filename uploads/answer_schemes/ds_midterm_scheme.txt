@@ -1,5 +1,0 @@
-Q1|10: A binary tree is a hierarchical data structure in which each node has at most two children called left and right child. It is used in searching and sorting operations.
-
-Q2|10: Breadth First Search is a graph traversal algorithm that explores nodes level by level using a queue data structure. It is commonly used to find shortest paths in unweighted graphs.
-
-Q3|10: Quick Sort is a divide and conquer sorting algorithm that selects a pivot element, partitions the array into subarrays, and recursively sorts them.

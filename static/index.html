@@ -1,374 +1,205 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduAI | Institutional AI Assessment Portal</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        /* --- LANDING SPECIFIC EXTENSIONS --- */
+        body { background-color: white; }
 
-<title>EduAI | Institutional AI Assessment Portal</title>
+        /* HERO SECTION */
+        .hero {
+            padding: 120px 20px 80px 20px;
+            background: radial-gradient(circle at top right, #1e293b, #0f172a);
+            color: white;
+            text-align: center;
+            clip-path: polygon(0 0, 100% 0, 100% 90%, 0 100%);
+            position: relative;
+        }
+        .hero h1 {
+            font-size: clamp(2.5rem, 6vw, 4rem);
+            font-weight: 800;
+            letter-spacing: -2px;
+            margin-bottom: 20px;
+            background: linear-gradient(to right, #fff, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .hero p {
+            max-width: 700px;
+            margin: 0 auto 50px auto;
+            font-size: 1.1rem;
+            color: #94a3b8;
+            line-height: 1.8;
+        }
 
-<link rel="stylesheet" href="/static/style.css?v=3">
+        /* PORTAL ACCESS MODULES */
+        .portal-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            max-width: 1000px;
+            margin: -100px auto 100px auto;
+            padding: 0 20px;
+            position: relative; 
+            z-index: 10;
+        }
+        .portal-card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            border: 1px solid var(--border);
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+        .portal-card:hover { transform: translateY(-10px); }
+        .portal-icon { font-size: 3rem; margin-bottom: 20px; display: block; }
+        .portal-card h3 { font-size: 1.5rem; margin-bottom: 15px; color: var(--text-header); }
+        .portal-card p { color: var(--text-body); margin-bottom: 30px; font-size: 0.95rem; }
 
-<style>
+        /* FEATURE & WORKFLOW GRIDS */
+        .feature-grid, .workflow-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+            margin-top: 40px;
+        }
+        .module-card {
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            padding: 30px;
+            border-radius: 16px;
+            transition: all 0.2s;
+        }
+        .module-card:hover { background: white; border-color: var(--primary); box-shadow: var(--shadow-md); }
+        .module-card h4 { margin: 15px 0 10px 0; color: var(--text-header); font-size: 1.1rem; }
 
-/* ================= HERO ================= */
+        /* STATS SECTION */
+        .stats-wrapper {
+            background: #f1f5f9;
+            padding: 80px 20px;
+            border-radius: 32px;
+            margin: 80px auto;
+            max-width: 1100px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            text-align: center;
+        }
+        .stat-item h2 { font-size: 3rem; color: var(--primary); font-weight: 800; margin-bottom: 5px; }
+        .stat-item p { font-weight: 600; color: var(--text-muted); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1px; }
 
-.hero{
-    min-height:75vh;
-    background:
-    linear-gradient(rgba(30,58,138,0.9),rgba(30,58,138,0.9)),
-    url("https://images.unsplash.com/photo-1523050853063-bd401750797c?auto=format&fit=crop&q=80");
+        /* NAVBAR BLUR */
+        .navbar {
+            backdrop-filter: blur(12px);
+            background: rgba(15, 23, 42, 0.8) !important;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .navbar .logo { color: white !important; }
+        .navbar .nav-links a { color: rgba(255,255,255,0.7); }
+        .navbar .nav-links a:hover { color: white; }
 
-    background-size:cover;
-    background-position:center;
-
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    text-align:center;
-
-    color:white;
-    padding:80px 20px;
-}
-
-.hero h1{
-    font-size:clamp(2rem,5vw,3rem);
-    font-weight:800;
-    margin-bottom:20px;
-}
-
-.hero p{
-    max-width:650px;
-    margin:auto;
-    opacity:0.9;
-}
-
-/* ================= ROLE CARDS ================= */
-
-.role-grid{
-    display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
-    gap:30px;
-    max-width:700px;
-    margin:50px auto 0 auto;
-}
-
-.role-card{
-    background:white;
-    border-radius:12px;
-    border:1px solid var(--border);
-    padding:35px 30px;
-    text-align:center;
-    box-shadow:0 6px 15px rgba(0,0,0,0.08);
-
-    display:flex;
-    flex-direction:column;
-    justify-content:center;
-    gap:15px;
-}
-
-.role-icon{
-    font-size:40px;
-}
-
-.role-card p{
-    color:var(--text-muted);
-}
-
-.role-card .primary-btn{
-    width:100%;
-}
-
-/* ================= FEATURES ================= */
-
-.feature-grid{
-    display:grid;
-    grid-template-columns:repeat(3,1fr);
-    gap:30px;
-}
-
-.feature-card{
-    text-align:center;
-    padding:30px;
-    border-radius:12px;
-    border:1px solid var(--border);
-    background:white;
-}
-
-.feature-card h4{
-    margin:10px 0;
-}
-
-/* ================= WORKFLOW ================= */
-
-.workflow-grid{
-    display:grid;
-    grid-template-columns:repeat(3,1fr);
-    gap:30px;
-}
-
-.workflow-card{
-    background:white;
-    border:1px solid var(--border);
-    padding:25px;
-    border-radius:10px;
-}
-
-/* ================= STATS ================= */
-
-.stats{
-    display:flex;
-    justify-content:space-around;
-    margin:60px 0;
-    text-align:center;
-}
-
-.stat h2{
-    font-size:36px;
-    color:var(--primary);
-}
-
-.stat p{
-    color:var(--text-muted);
-}
-
-/* ================= FOOTER ================= */
-
-footer{
-    margin-top:40px;
-    text-align:center;
-    padding:30px;
-    font-size:0.9rem;
-    color:var(--text-muted);
-}
-
-/* ================= RESPONSIVE ================= */
-
-@media(max-width:1024px){
-
-.feature-grid{
-grid-template-columns:1fr 1fr;
-}
-
-.workflow-grid{
-grid-template-columns:1fr 1fr;
-}
-
-}
-
-@media(max-width:768px){
-
-.navbar{
-flex-direction:column;
-height:auto;
-padding:15px;
-gap:10px;
-}
-
-.nav-links{
-display:flex;
-gap:15px;
-}
-
-.feature-grid{
-grid-template-columns:1fr;
-}
-
-.workflow-grid{
-grid-template-columns:1fr;
-}
-
-.stats{
-flex-direction:column;
-gap:25px;
-}
-
-}
-
-</style>
-
+        @media (max-width: 768px) {
+            .stats-wrapper { grid-template-columns: 1fr; gap: 40px; }
+            .hero { padding-top: 100px; clip-path: none; border-radius: 0 0 40px 40px; }
+        }
+    </style>
 </head>
-
 <body>
 
-<!-- ================= NAVBAR ================= -->
-
+<!-- NAVBAR -->
 <div class="navbar">
-
-<div class="logo">EduAI</div>
-
-<div class="nav-links">
-<a href="#features">Features</a>
-<a href="#workflow">How It Works</a>
-<a href="/static/login.html" class="primary-btn">Sign In</a>
+    <div class="logo">EduAI</div>
+    <div class="nav-links">
+        <a href="#features">Capabilities</a>
+        <a href="#workflow">Workflow</a>
+        <a href="/static/login.html" class="primary-btn" style="padding: 10px 24px; font-size: 0.85rem;">Sign In</a>
+    </div>
 </div>
 
-</div>
-
-
-<!-- ================= HERO ================= -->
-
+<!-- HERO -->
 <div class="hero">
-
-<div>
-
-<h1>AI-Powered Academic Assessment</h1>
-
-<p>
-EduAI is an intelligent grading platform that evaluates descriptive answers using
-advanced Natural Language Processing. Built for universities seeking fair,
-transparent and scalable assessments.
-</p>
-
-
-<div class="role-grid">
-
-<div class="role-card">
-
-<div class="role-icon">🎓</div>
-
-<h3>Student Portal</h3>
-
-<p>Submit exam answers and receive instant AI-evaluated results.</p>
-
-<a href="/static/login.html" class="primary-btn">Student Login</a>
-
+    <h1>Next-Gen Academic Evaluation</h1>
+    <p>
+        The institutional standard for AI-powered descriptive answer grading. 
+        Transforming traditional assessments with semantic NLP and real-time faculty management.
+    </p>
 </div>
 
-
-<div class="role-card">
-
-<div class="role-icon">👨‍🏫</div>
-
-<h3>Faculty Portal</h3>
-
-<p>Upload exams, answer schemes and evaluate submissions efficiently.</p>
-
-<a href="/static/login.html" class="primary-btn">Faculty Login</a>
-
+<!-- PORTAL ENTRY POINTS -->
+<div class="portal-grid">
+    <div class="portal-card">
+        <span class="portal-icon">🎓</span>
+        <h3>Student Portal</h3>
+        <p>Participate in scheduled assessments, upload submissions, and track your performance history.</p>
+        <a href="/static/login.html" class="primary-btn">Log In to Portal</a>
+    </div>
+    <div class="portal-card">
+        <span class="portal-icon">🏫</span>
+        <h3>Faculty Portal</h3>
+        <p>Coordinate examinations, configure evaluation schemes, and access class analytics.</p>
+        <a href="/static/login.html" class="primary-btn">Faculty Access</a>
+    </div>
 </div>
 
-</div>
-
-</div>
-
-</div>
-
-
-<!-- ================= FEATURES ================= -->
-
+<!-- FEATURES -->
 <div class="container" id="features">
+    <div style="text-align: center; margin-bottom: 60px;">
+        <span style="color: var(--primary); font-weight: 800; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 2px;">Professional Features</span>
+        <h2 style="font-size: 2rem; color: var(--text-header); margin-top: 10px;">Intelligent Grading Infrastructure</h2>
+    </div>
 
-<div class="section">
-
-<h3>Platform Capabilities</h3>
-
-<div class="feature-grid">
-
-<div class="feature-card">
-<div style="font-size:30px">🤖</div>
-<h4>AI Semantic Grading</h4>
-<p>
-Uses sentence transformer models to compare student answers with model solutions.
-</p>
+    <div class="feature-grid">
+        <div class="module-card">
+            <div style="font-size: 2rem;">🧠</div>
+            <h4>Semantic Evaluation</h4>
+            <p style="font-size: 0.9rem; color: var(--text-muted);">Goes beyond keywords using sentence transformer models to understand content context.</p>
+        </div>
+        <div class="module-card">
+            <div style="font-size: 2rem;">📂</div>
+            <h4>Hybrid Interface</h4>
+            <p style="font-size: 0.9rem; color: var(--text-muted);">Supports rich-text typing or professional PDF/DOCX uploads for handwritten script digitizing.</p>
+        </div>
+        <div class="module-card">
+            <div style="font-size: 2rem;">⚡</div>
+            <h4>Instant Insights</h4>
+            <p style="font-size: 0.9rem; color: var(--text-muted);">Drastic reduction in grading cycles with immediate result generation for both students and staff.</p>
+        </div>
+    </div>
 </div>
 
-<div class="feature-card">
-<div style="font-size:30px">📄</div>
-<h4>Hybrid Submission</h4>
-<p>
-Students can type answers directly or upload full answer sheets in PDF or DOCX.
-</p>
+<!-- WORKFLOW -->
+<div class="container" id="workflow" style="margin-top: 100px;">
+    <div style="text-align: center; margin-bottom: 60px;">
+        <span style="color: var(--primary); font-weight: 800; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 2px;">Deployment</span>
+        <h2 style="font-size: 2rem; color: var(--text-header); margin-top: 10px;">Three-Step Academic Cycle</h2>
+    </div>
+
+    <div class="workflow-grid">
+        <div class="module-card">
+            <h4>01. Enrollment</h4>
+            <p style="font-size: 0.9rem; color: var(--text-muted);">Faculty uploads the question paper and links the authoritative marking logic.</p>
+        </div>
+        <div class="module-card">
+            <h4>02. Participation</h4>
+            <p style="font-size: 0.9rem; color: var(--text-muted);">Students enter the secure digital environment to complete scheduled assessments.</p>
+        </div>
+        <div class="module-card">
+            <h4>03. Certification</h4>
+            <p style="font-size: 0.9rem; color: var(--text-muted);">AI compares inputs against the scheme to produce a detailed statement of results.</p>
+        </div>
+    </div>
 </div>
 
-<div class="feature-card">
-<div style="font-size:30px">📊</div>
-<h4>Instant Evaluation</h4>
-<p>
-Teachers and students receive immediate grading insights and performance analytics.
-</p>
-</div>
-
-</div>
-
-</div>
-
-</div>
-
-
-<!-- ================= WORKFLOW ================= -->
-
-<div class="container" id="workflow">
-
-<div class="section">
-
-<h3>How EduAI Works</h3>
-
-<div class="workflow-grid">
-
-<div class="workflow-card">
-<h4>1. Teacher Uploads Exam</h4>
-<p>
-Faculty upload question papers and official answer schemes.
-</p>
-</div>
-
-<div class="workflow-card">
-<h4>2. Student Submits Answers</h4>
-<p>
-Students type answers or upload answer sheets for evaluation.
-</p>
-</div>
-
-<div class="workflow-card">
-<h4>3. AI Evaluates Responses</h4>
-<p>
-Hybrid NLP model compares responses and automatically assigns marks.
-</p>
-</div>
-
-</div>
-
-</div>
-
-</div>
-
-
-<!-- ================= STATS ================= -->
-
-<div class="container">
-
-<div class="stats">
-
-<div class="stat">
-<h2>95%</h2>
-<p>Grading Accuracy</p>
-</div>
-
-<div class="stat">
-<h2>3×</h2>
-<p>Faster Evaluation</p>
-</div>
-
-<div class="stat">
-<h2>100+</h2>
-<p>AI Evaluations</p>
-</div>
-
-</div>
-
-</div>
-
-
-<!-- ================= FOOTER ================= -->
-
-<footer>
-
-© 2026 EduAI Institutional Assessment Systems  
-All Rights Reserved
-
+<!-- FOOTER -->
+<footer style="padding: 60px 20px; border-top: 1px solid var(--border); text-align: center;">
+    <div class="logo" style="color: var(--primary); margin-bottom: 20px;">EduAI</div>
+    <p style="color: var(--text-muted); font-size: 0.85rem;">
+        © 2026 EduAI Institutional Assessment Systems.
+    </p>
 </footer>
-
 
 </body>
 </html>

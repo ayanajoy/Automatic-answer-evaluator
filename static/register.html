@@ -1,25 +1,27 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Register | EduAI Portal</title>
-    <link rel="stylesheet" href="style.css?v=1.1">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Account | EduAI</title>
+    <link rel="stylesheet" href="/static/style.css">
 </head>
 <body class="auth-wrapper">
     <div class="auth-card">
-        <div class="logo" style="margin-bottom: 20px; border-color: var(--primary); color: var(--primary);">EduAI</div>
-        <h2>Create Account</h2>
-        <p>Institutional Access Enrollment</p>
+        <div class="auth-logo">EduAI</div>
+        <h2 style="color: var(--text-header); font-size: 2rem; font-weight: 700; margin-bottom: 12px;">Join EduAI</h2>
+        <p style="margin-bottom: 40px; font-size: 0.95rem;">Join the AI-powered academic network today.</p>
 
         <div class="form-group">
-            <label>Full Name</label>
-            <input type="text" id="name" placeholder="John Doe">
+            <label>Full Legal Name</label>
+            <input type="text" id="name" placeholder="Johnathan Doe">
         </div>
 
         <div class="form-group">
-            <label>Role</label>
+            <label>Position / Role</label>
             <select id="role">
-                <option value="student">Student</option>
-                <option value="teacher">Teacher / Faculty</option>
+                <option value="student">Undergraduate / Student</option>
+                <option value="teacher">Teacher / Faculty Member</option>
             </select>
         </div>
 
@@ -29,13 +31,17 @@
         </div>
 
         <div class="form-group">
-            <label>Choose Password</label>
-            <input type="password" placeholder="••••••••">
+            <label>Secure Password</label>
+            <input type="password" placeholder="Create a strong password">
         </div>
 
-        <button class="primary-btn" onclick="alert('Registration successful! Please login.')">Register Account</button>
+        <button class="primary-btn" onclick="alert('Account created! Proceed to login.')" style="margin-top: 8px;">Create My Account</button>
         
-        <p class="link-text">Already enrolled? <a href="login.html">Sign In</a></p>
+        <div class="auth-footer">
+            <p style="font-size: 0.9rem;">
+                Already have an account? <a href="login.html" class="auth-link">Sign In</a>
+            </p>
+        </div>
     </div>
 </body>
 </html>

@@ -35,7 +35,7 @@ def get_questions(paper_id: int):
 
     scheme_path = scheme[2]
 
-    with open(scheme_path, "r", encoding="utf-8") as f:
+    with open(scheme_path, "r", encoding="utf-8", errors="ignore") as f:
         content = f.read()
 
     pattern = r"Q(\d+)\|(\d+):(.*?)(?=Q\d+\|\d+:|$)"
@@ -93,7 +93,7 @@ async def submit_paper(
 
     scheme_path = scheme[2]
 
-    with open(scheme_path, "r", encoding="utf-8") as f:
+    with open(scheme_path, "r", encoding="utf-8", errors="ignore") as f:
         scheme_content = f.read()
 
     pattern = r"Q(\d+)\|(\d+):(.*?)(?=Q\d+\|\d+:|$)"

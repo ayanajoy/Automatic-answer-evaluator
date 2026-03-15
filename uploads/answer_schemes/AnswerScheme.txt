@@ -1,0 +1,37 @@
+Q1|10:Machine Learning is a field of Artificial Intelligence that allows computers to learn patterns from data and make predictions or decisions without being explicitly programmed.
+
+There are three main types of machine learning:
+
+Supervised Learning – uses labeled training data to predict outcomes.
+Examples include classification and regression.
+
+Unsupervised Learning – finds hidden patterns in unlabeled data.
+Clustering is a common example.
+
+Reinforcement Learning – the system learns by interacting with the environment and receiving rewards or penalties.
+
+
+Q2|10:Natural Language Processing (NLP) is a branch of artificial intelligence that enables computers to understand, interpret, and generate human language.
+
+Major applications include:
+
+Chatbots and virtual assistants
+Machine translation systems
+Sentiment analysis
+Text summarization
+Speech recognition
+Information extraction from documents
+
+
+Q3|10:Data preprocessing is the process of preparing raw data before using it in machine learning models.
+
+It is important because real-world data is often incomplete, noisy, or inconsistent.
+
+Major preprocessing steps include:
+
+Data cleaning – removing missing or incorrect values
+Data transformation – normalization and scaling
+Feature selection – choosing important attributes
+Removing duplicates and irrelevant data
+
+Proper preprocessing improves model accuracy and performance.

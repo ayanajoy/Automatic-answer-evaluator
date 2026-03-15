@@ -2,41 +2,43 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Login | EduAI Assessment</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Institutional Login | EduAI</title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body class="auth-wrapper">
     <div class="auth-card">
-        <div class="logo" style="margin-bottom: 24px; text-align: center;">EduAI</div>
-        <h2 style="font-size: 1.5rem; text-align: center;">Sign In</h2>
-        <p style="color: var(--text-muted); text-align: center; margin-bottom: 32px; font-size: 0.9rem;">Academic Assessment Portal</p>
+        <div class="auth-logo">EduAI</div>
+        <h2 style="color: var(--text-header); font-size: 2rem; font-weight: 700; margin-bottom: 12px;">Welcome back</h2>
+        <p style="margin-bottom: 40px; font-size: 0.95rem;">Enter your institutional details to continue.</p>
 
         <div class="form-group">
-            <label>Educational Role</label>
+            <label>Academic Role</label>
             <select id="role">
-                <option value="student">Student</option>
-                <option value="teacher">Teacher / Faculty</option>
+                <option value="student">Student Account</option>
+                <option value="teacher">Faculty / Staff Account</option>
             </select>
         </div>
 
         <div class="form-group">
-            <label>Institutional Email</label>
-            <input type="email" id="email" placeholder="name@university.edu">
+            <label>Email Address</label>
+            <input type="email" id="email" placeholder="name@university.edu" required>
         </div>
 
         <div class="form-group">
             <label>Password</label>
-            <input type="password" id="password" placeholder="••••••••">
+            <input type="password" id="password" placeholder="••••••••" required>
         </div>
 
-        <button class="primary-btn" style="width: 100%; margin-top: 10px;" onclick="handleLogin()">Log In to Dashboard</button>
+        <button class="primary-btn" onclick="handleLogin()">Sign In to Portal</button>
         
-        <p style="margin-top: 24px; font-size: 0.85rem; text-align: center; color: var(--text-muted);">
-            Don't have an account? <a href="register.html" style="color: var(--primary); font-weight: 600; text-decoration: none;">Register</a>
-        </p>
+        <div class="auth-footer">
+            <p style="font-size: 0.9rem;">
+                New to EduAI? <a href="register.html" class="auth-link">Create an account</a>
+            </p>
+        </div>
     </div>
 
-    <!-- Script remains exactly the same -->
     <script>
     function handleLogin() {
         const role = document.getElementById('role').value;
