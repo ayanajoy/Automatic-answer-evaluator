@@ -436,14 +436,29 @@ async function submitPaper(){
             // Map results to UI
             document.getElementById("resultMarks").innerText = Number(data.total_obtained).toFixed(2) + " / " + data.total_marks;
             const container = document.getElementById("questionMarks");
-            container.innerHTML = "<h4>Question Breakdown</h4>";
-            data.details.forEach(q => {
-                container.innerHTML += `
-                    <div class="q-mark-item">
-                        <span>Question ${q.question}</span>
-                        <span style="color:var(--primary); font-weight:700;">${q.marks_awarded.toFixed(2)} / ${q.max_marks}</span>
-                    </div>`;
-            });
+
+container.innerHTML = "<h3 style='margin-bottom:10px'>Marks Awarded Per Question</h3>";
+
+data.details.forEach(q => {
+
+container.innerHTML += `
+<div style="background:var(--bg-main); padding:15px; border-radius:12px; margin-bottom:12px;">
+
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+        <strong>Question ${q.question}</strong>
+        <span style="color:var(--primary); font-weight:700;">
+            ${q.marks_awarded.toFixed(2)} / ${q.max_marks}
+        </span>
+    </div>
+
+    <div style="margin-top:6px; font-size:13px; color:#475569;">
+        <strong>AI Feedback:</strong> ${q.explanation}
+    </div>
+
+</div>
+`;
+
+});
             confetti({ particleCount:150, spread:70, origin:{y:0.6} });
         }, 500); // Brief pause at 100% for visual satisfaction
 

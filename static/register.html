@@ -1,47 +1,113 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Create Account | EduAI</title>
-    <link rel="stylesheet" href="/static/style.css">
-</head>
-<body class="auth-wrapper">
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+
+  <body class="auth-wrapper">
     <div class="auth-card">
-        <div class="auth-logo">EduAI</div>
-        <h2 style="color: var(--text-header); font-size: 2rem; font-weight: 700; margin-bottom: 12px;">Join EduAI</h2>
-        <p style="margin-bottom: 40px; font-size: 0.95rem;">Join the AI-powered academic network today.</p>
+      <div class="auth-logo">EduAI</div>
 
-        <div class="form-group">
-            <label>Full Legal Name</label>
-            <input type="text" id="name" placeholder="Johnathan Doe">
-        </div>
+      <h2
+        style="
+          color: var(--text-header);
+          font-size: 2rem;
+          font-weight: 700;
+          margin-bottom: 12px;
+        "
+      >
+        Join EduAI
+      </h2>
 
-        <div class="form-group">
-            <label>Position / Role</label>
-            <select id="role">
-                <option value="student">Undergraduate / Student</option>
-                <option value="teacher">Teacher / Faculty Member</option>
-            </select>
-        </div>
+      <p style="margin-bottom: 40px; font-size: 0.95rem">
+        Join the AI-powered academic network today.
+      </p>
 
-        <div class="form-group">
-            <label>University Email</label>
-            <input type="email" id="email" placeholder="name@university.edu">
-        </div>
+      <div class="form-group">
+        <label>Full Name</label>
+        <input type="text" id="name" placeholder="Johnathan Doe" />
+      </div>
 
-        <div class="form-group">
-            <label>Secure Password</label>
-            <input type="password" placeholder="Create a strong password">
-        </div>
+      <div class="form-group">
+        <label>Position / Role</label>
+        <select id="role">
+          <option value="student">Undergraduate / Student</option>
+          <option value="teacher">Teacher / Faculty Member</option>
+        </select>
+      </div>
 
-        <button class="primary-btn" onclick="alert('Account created! Proceed to login.')" style="margin-top: 8px;">Create My Account</button>
-        
-        <div class="auth-footer">
-            <p style="font-size: 0.9rem;">
-                Already have an account? <a href="login.html" class="auth-link">Sign In</a>
-            </p>
-        </div>
+      <div class="form-group">
+        <label>University Email</label>
+        <input type="email" id="email" placeholder="name@university.edu" />
+      </div>
+
+      <div class="form-group">
+        <label>Secure Password</label>
+        <input
+          type="password"
+          id="password"
+          placeholder="Create a strong password"
+        />
+      </div>
+
+      <button
+        class="primary-btn"
+        onclick="registerUser()"
+        style="margin-top: 8px"
+      >
+        Create My Account
+      </button>
+
+      <div class="auth-footer">
+        <p style="font-size: 0.9rem">
+          Already have an account?
+          <a href="login.html" class="auth-link">Sign In</a>
+        </p>
+      </div>
     </div>
-</body>
+
+    <script>
+      async function registerUser() {
+        const name = document.getElementById("name").value.trim();
+        const role = document.getElementById("role").value;
+        const email = document.getElementById("email").value.trim();
+        const password = document.getElementById("password").value.trim();
+
+        if (name === "" || email === "" || password === "") {
+          alert("Please fill all fields");
+          return;
+        }
+
+        try {
+          const response = await fetch("/register", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              name: name,
+              email: email,
+              password: password,
+              role: role,
+            }),
+          });
+
+          const data = await response.json();
+
+          if (data.status === "success") {
+            alert("Account created successfully!\nYou can now login.");
+
+            window.location.href = "login.html";
+          } else {
+            alert("User already registered.\nPlease login.");
+          }
+        } catch (error) {
+          alert("Server error. Please try again later.");
+        }
+      }
+    </script>
+  </body>
 </html>

@@ -1,55 +1,105 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Institutional Login | EduAI</title>
-    <link rel="stylesheet" href="/static/style.css">
-</head>
-<body class="auth-wrapper">
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+
+  <body class="auth-wrapper">
     <div class="auth-card">
-        <div class="auth-logo">EduAI</div>
-        <h2 style="color: var(--text-header); font-size: 2rem; font-weight: 700; margin-bottom: 12px;">Welcome back</h2>
-        <p style="margin-bottom: 40px; font-size: 0.95rem;">Enter your institutional details to continue.</p>
+      <div class="auth-logo">EduAI</div>
 
-        <div class="form-group">
-            <label>Academic Role</label>
-            <select id="role">
-                <option value="student">Student Account</option>
-                <option value="teacher">Faculty / Staff Account</option>
-            </select>
-        </div>
+      <h2
+        style="
+          color: var(--text-header);
+          font-size: 2rem;
+          font-weight: 700;
+          margin-bottom: 12px;
+        "
+      >
+        Welcome back
+      </h2>
 
-        <div class="form-group">
-            <label>Email Address</label>
-            <input type="email" id="email" placeholder="name@university.edu" required>
-        </div>
+      <p style="margin-bottom: 40px; font-size: 0.95rem">
+        Enter your institutional details to continue.
+      </p>
 
-        <div class="form-group">
-            <label>Password</label>
-            <input type="password" id="password" placeholder="••••••••" required>
-        </div>
+      <div class="form-group">
+        <label>Academic Role</label>
+        <select id="role">
+          <option value="student">Student Account</option>
+          <option value="teacher">Faculty / Staff Account</option>
+        </select>
+      </div>
 
-        <button class="primary-btn" onclick="handleLogin()">Sign In to Portal</button>
-        
-        <div class="auth-footer">
-            <p style="font-size: 0.9rem;">
-                New to EduAI? <a href="register.html" class="auth-link">Create an account</a>
-            </p>
-        </div>
+      <div class="form-group">
+        <label>Email Address</label>
+        <input
+          type="email"
+          id="email"
+          placeholder="name@university.edu"
+          required
+        />
+      </div>
+
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="password" placeholder="••••••••" required />
+      </div>
+
+      <button class="primary-btn" onclick="handleLogin()">
+        Sign In to Portal
+      </button>
+
+      <div class="auth-footer">
+        <p style="font-size: 0.9rem">
+          New to EduAI?
+          <a href="register.html" class="auth-link">Create an account</a>
+        </p>
+      </div>
     </div>
 
     <script>
-    function handleLogin() {
-        const role = document.getElementById('role').value;
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
-        if(!email || !password){ alert("Please enter credentials"); return; }
-        const name = email.split('@')[0];
-        localStorage.setItem('user', JSON.stringify({ name:name, role:role, email:email }));
-        if(role === "teacher"){ window.location.href = "/static/teacher.html"; } 
-        else { window.location.href = "/static/student.html"; }
-    }
+      async function handleLogin() {
+        const email = document.getElementById("email").value.trim();
+        const password = document.getElementById("password").value.trim();
+
+        if (email === "" || password === "") {
+          alert("Please enter email and password");
+          return;
+        }
+
+        try {
+          const response = await fetch("/login", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              email: email,
+              password: password,
+            }),
+          });
+
+          const data = await response.json();
+
+          if (data.status === "success") {
+            localStorage.setItem("user", JSON.stringify(data.user));
+
+            if (data.user.role === "teacher") {
+              window.location.href = "/static/teacher.html";
+            } else {
+              window.location.href = "/static/student.html";
+            }
+          } else {
+            alert("⚠️ Account not found.\nPlease create an account first.");
+          }
+        } catch (error) {
+          alert("Server error. Please try again later.");
+        }
+      }
     </script>
-</body>
+  </body>
 </html>

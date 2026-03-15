@@ -10,7 +10,7 @@ from database import (
     add_submission
 )
 
-from nlp.similarity import calculate_marks
+from nlp.similarity import calculate_marks, generate_explanation
 
 router = APIRouter(prefix="/student", tags=["Student"])
 
@@ -164,6 +164,8 @@ async def submit_paper(
             marks
         )
 
+        explanation = generate_explanation(breakdown)
+
         total_obtained += float(obtained)
 
         detailed_results.append({
@@ -172,7 +174,9 @@ async def submit_paper(
             "max_marks": int(marks),
             "semantic_score": float(breakdown["semantic"]),
             "keyword_score": float(breakdown["keyword"]),
-            "length_score": float(breakdown["length"])
+            "length_score": float(breakdown["length"]),
+            "concept_coverage": breakdown["concept_coverage"],
+            "explanation": explanation
         })
 
         add_submission(

@@ -20,6 +20,18 @@ def get_connection():
 def initialize_database():
     conn = get_connection()
     cursor = conn.cursor()
+    
+    # USERS TABLE (AUTHENTICATION)
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        email TEXT UNIQUE NOT NULL,
+        password TEXT NOT NULL,
+        role TEXT NOT NULL,
+        created_at TEXT NOT NULL
+    )
+    """)
 
     # QUESTION PAPERS
     cursor.execute("""
@@ -297,3 +309,44 @@ def get_student_by_id(student_id):
 
     conn.close()
     return student
+
+def register_user(name, email, password, role):
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute("""
+        INSERT INTO users (name,email,password,role,created_at)
+        VALUES (?,?,?,?,?)
+        """, (
+            name,
+            email,
+            password,
+            role,
+            datetime.utcnow().isoformat()
+        ))
+
+        conn.commit()
+        conn.close()
+        return True
+
+    except:
+        conn.close()
+        return False
+
+
+def login_user(email, password):
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+    SELECT id,name,role,email
+    FROM users
+    WHERE email=? AND password=?
+    """, (email, password))
+
+    user = cursor.fetchone()
+    conn.close()
+
+    return user

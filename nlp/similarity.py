@@ -2,18 +2,22 @@ from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
 import re
+import nltk
 from .preprocess import preprocess
 
 # Load model once
 model = SentenceTransformer('all-MiniLM-L6-v2')
 
+# Ensure tokenizer available
+nltk.download('punkt', quiet=True)
+
 
 # ==========================================
-# Split sentences from student answer
+# Split sentences properly using NLTK
 # ==========================================
 def split_sentences(text):
 
-    sentences = re.split(r'[.?!]', text)
+    sentences = nltk.sent_tokenize(text)
 
     cleaned = []
 
@@ -61,7 +65,8 @@ def calculate_marks(model_answer, student_answer, total_marks):
         return 0.0, {
             "semantic": 0,
             "keyword": 0,
-            "length": 0
+            "length": 0,
+            "concept_coverage": "0/0"
         }
 
     # --------------------------------------
@@ -108,7 +113,16 @@ def calculate_marks(model_answer, student_answer, total_marks):
 
         point_scores.append(best_score)
 
-    semantic = float(np.mean(point_scores))
+    # --------------------------------------
+    # Concept coverage scoring
+    # --------------------------------------
+    coverage_threshold = 0.6
+
+    covered_points = sum(
+        1 for score in point_scores if score >= coverage_threshold
+    )
+
+    semantic = covered_points / len(point_scores)
 
     # --------------------------------------
     # Keyword matching
@@ -121,7 +135,7 @@ def calculate_marks(model_answer, student_answer, total_marks):
     matched_keywords = 0
 
     for word in unique_keywords:
-        if word in student_clean:
+        if f" {word} " in f" {student_clean} ":
             matched_keywords += 1
 
     keyword = matched_keywords / len(unique_keywords) if unique_keywords else 0
@@ -145,6 +159,25 @@ def calculate_marks(model_answer, student_answer, total_marks):
 
     length = min(student_len / model_len, 1.0)
 
+    # Penalize extremely short answers
+    if student_len < model_len * 0.3:
+        length *= 0.5
+
+    # --------------------------------------
+    # Repetition penalty
+    # --------------------------------------
+    words = student_answer.split()
+
+    if len(words) > 0:
+        unique_ratio = len(set(words)) / len(words)
+
+        if unique_ratio < 0.6:
+            repetition_penalty = 0.85
+        else:
+            repetition_penalty = 1.0
+    else:
+        repetition_penalty = 1.0
+
     # --------------------------------------
     # Final weighted score
     # --------------------------------------
@@ -152,7 +185,7 @@ def calculate_marks(model_answer, student_answer, total_marks):
         0.70 * semantic +
         0.20 * keyword +
         0.10 * length
-    ) * neg_penalty
+    ) * neg_penalty * repetition_penalty
 
     marks = float(final_score * total_marks)
 
@@ -160,5 +193,37 @@ def calculate_marks(model_answer, student_answer, total_marks):
         "semantic": round(semantic, 3),
         "keyword": round(keyword, 3),
         "length": round(length, 3),
+        "concept_coverage": f"{covered_points}/{len(point_scores)}",
         "negation_applied": neg_penalty < 1.0
     }
+    
+def generate_explanation(breakdown):
+
+    explanation = []
+
+    semantic = breakdown["semantic"]
+    keyword = breakdown["keyword"]
+    length = breakdown["length"]
+
+    if semantic > 0.8:
+        explanation.append("Strong conceptual similarity with model answer.")
+    elif semantic > 0.6:
+        explanation.append("Moderate conceptual similarity detected.")
+    else:
+        explanation.append("Limited conceptual match with the expected answer.")
+
+    if keyword > 0.7:
+        explanation.append("Most important keywords are present.")
+    elif keyword > 0.4:
+        explanation.append("Some relevant keywords detected.")
+    else:
+        explanation.append("Few expected keywords were found.")
+
+    if length > 0.9:
+        explanation.append("Answer length is sufficient.")
+    elif length > 0.5:
+        explanation.append("Answer length is moderate.")
+    else:
+        explanation.append("Answer is too short compared to expected response.")
+
+    return " ".join(explanation)
