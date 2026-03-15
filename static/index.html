@@ -5,201 +5,387 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EduAI | Institutional AI Assessment Portal</title>
     <link rel="stylesheet" href="/static/style.css">
+    <!-- Include Vanilla-Tilt JS for 3D card effects -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.0/vanilla-tilt.min.js" integrity="sha512-RX/OFugIG/bQ50005x8ZkQ8uBf02a0a2T2qA3F2m/5iVpG63B8jU6eLpE6AWe5uYvtzd1D78N9gYq1D3oWvW0w==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <style>
-        /* --- LANDING SPECIFIC EXTENSIONS --- */
-        body { background-color: white; }
-
-        /* HERO SECTION */
+        /* --- ACADEMIC SOOTHING HERO --- */
         .hero {
-            padding: 120px 20px 80px 20px;
-            background: radial-gradient(circle at top right, #1e293b, #0f172a);
-            color: white;
+            padding: 140px 20px 100px 20px;
             text-align: center;
-            clip-path: polygon(0 0, 100% 0, 100% 90%, 0 100%);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            /* A smooth, eye-pleasing mix of soft pastel indigo and off-white/gray */
+            background: linear-gradient(135deg, #eef2ff 0%, #f4f6f8 100%);
+            border-bottom: 1px solid var(--border);
+        }
+
+        /* Ambient Glow Behind Hero */
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -20%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 800px;
+            height: 800px;
+            background: radial-gradient(circle, rgba(79, 70, 229, 0.05) 0%, transparent 60%);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .hero h1 {
+            position: relative;
+            z-index: 1;
+            font-size: clamp(3rem, 7vw, 5.5rem);
+            font-weight: 800;
+            letter-spacing: -3px;
+            margin-bottom: 24px;
+            color: var(--primary);
+        }
+        
+        .hero p {
+            position: relative;
+            z-index: 1;
+            max-width: 700px;
+            margin: 0 auto 40px auto;
+            font-size: 1.25rem;
+            color: var(--text-body);
+            line-height: 1.8;
+            font-weight: 500;
+        }
+
+        /* --- UI MOCKUP IN HERO --- */
+        .hero-mockup {
+            position: relative;
+            z-index: 5;
+            width: 100%;
+            max-width: 900px;
+            margin: 20px auto 0 auto;
+            border-radius: var(--radius-xl);
+            background: #09090b;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.8), 0 0 40px rgba(59, 130, 246, 0.15);
+            overflow: hidden;
+            text-align: left;
+        }
+        .mockup-header {
+            background: #18181b;
+            padding: 12px 20px;
+            display: flex;
+            gap: 8px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .mockup-dot { width: 12px; height: 12px; border-radius: 50%; background: #3f3f46; }
+        .mockup-dot.r { background: #ef4444; }
+        .mockup-dot.y { background: #eab308; }
+        .mockup-dot.g { background: #22c55e; }
+        
+        .mockup-body {
+            padding: 30px;
+            background: radial-gradient(circle at top left, #121214, #09090b);
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+        }
+        .mockup-paper {
+            background: rgba(255,255,255,0.03);
+            border: 1px dashed rgba(255,255,255,0.1);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            font-family: monospace;
+            color: #d4d4d8;
+            font-size: 0.85rem;
             position: relative;
         }
-        .hero h1 {
-            font-size: clamp(2.5rem, 6vw, 4rem);
-            font-weight: 800;
-            letter-spacing: -2px;
-            margin-bottom: 20px;
-            background: linear-gradient(to right, #fff, #94a3b8);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+        .mockup-grade {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
         }
-        .hero p {
-            max-width: 700px;
-            margin: 0 auto 50px auto;
-            font-size: 1.1rem;
-            color: #94a3b8;
-            line-height: 1.8;
+        .mockup-grade h3 { color: #34d399; font-size: 3rem; margin: 0; font-family: 'Outfit'; line-height: 1;}
+        .mockup-grade p { color: #a1a1aa; font-size: 0.8rem; margin-top: 5px; text-transform: uppercase; letter-spacing: 1px;}
+        
+        /* Floating scanner line animation */
+        .scanner {
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: #3b82f6;
+            box-shadow: 0 0 10px #3b82f6, 0 0 20px #3b82f6;
+            animation: scan 3s infinite ease-in-out alternate;
         }
+        @keyframes scan {
+            0% { top: 10%; opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { top: 90%; opacity: 0; }
+        }
+
+        /* --- TRUSTED BY BANNER --- */
+        .trusted-banner {
+            border-top: 1px solid rgba(255,255,255,0.05);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            padding: 40px 20px;
+            text-align: center;
+            background: rgba(0,0,0,0.3);
+            margin-top: 60px;
+        }
+        .trusted-banner p {
+            color: #71717a;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 600;
+            margin-bottom: 25px;
+        }
+        .logos {
+            display: flex;
+            justify-content: center;
+            gap: 50px;
+            flex-wrap: wrap;
+            opacity: 0.4;
+            filter: grayscale(100%) invert(100%);
+        }
+        .logos span { font-family: 'Outfit'; font-weight: 800; font-size: 1.5rem; }
 
         /* PORTAL ACCESS MODULES */
         .portal-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
             gap: 30px;
             max-width: 1000px;
-            margin: -100px auto 100px auto;
+            margin: -60px auto 100px auto;
             padding: 0 20px;
-            position: relative; 
+            position: relative;
             z-index: 10;
         }
+        
         .portal-card {
-            background: white;
-            border-radius: 20px;
-            padding: 40px;
+            background: var(--bg-card);
+            border-radius: var(--radius-xl);
+            padding: 50px 40px;
             border: 1px solid var(--border);
-            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
             text-align: center;
-            transition: transform 0.3s ease;
+            transform-style: preserve-3d;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05); /* Soft light shadow */
+            position: relative;
         }
-        .portal-card:hover { transform: translateY(-10px); }
-        .portal-icon { font-size: 3rem; margin-bottom: 20px; display: block; }
-        .portal-card h3 { font-size: 1.5rem; margin-bottom: 15px; color: var(--text-header); }
-        .portal-card p { color: var(--text-body); margin-bottom: 30px; font-size: 0.95rem; }
+        .portal-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: var(--radius-xl);
+            padding: 2px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+        }
+        .portal-icon { 
+            font-size: 3.5rem; 
+            margin-bottom: 25px; 
+            display: inline-block; 
+            padding: 20px;
+            background: #f1f5f9;
+            border-radius: 50%;
+            border: 1px solid var(--border);
+            transform: translateZ(30px);
+            color: var(--primary);
+        }
+        
+        .portal-card h3 { 
+            font-size: 1.6rem; 
+            margin-bottom: 15px; 
+            color: var(--text-header); 
+            letter-spacing: -0.5px; 
+            transform: translateZ(20px);
+        }
+        
+        .portal-card p { 
+            color: var(--text-body); 
+            margin-bottom: 35px; 
+            font-size: 1rem; 
+            line-height: 1.6; 
+            transform: translateZ(10px);
+        }
 
-        /* FEATURE & WORKFLOW GRIDS */
+        /* FEATURE GRIDS */
         .feature-grid, .workflow-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 24px;
-            margin-top: 40px;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 50px;
         }
         .module-card {
-            background: #f8fafc;
+            background: #ffffff;
             border: 1px solid var(--border);
-            padding: 30px;
-            border-radius: 16px;
-            transition: all 0.2s;
+            padding: 40px 30px;
+            border-radius: var(--radius-xl);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            box-shadow: var(--shadow-soft);
         }
-        .module-card:hover { background: white; border-color: var(--primary); box-shadow: var(--shadow-md); }
-        .module-card h4 { margin: 15px 0 10px 0; color: var(--text-header); font-size: 1.1rem; }
-
-        /* STATS SECTION */
-        .stats-wrapper {
-            background: #f1f5f9;
-            padding: 80px 20px;
-            border-radius: 32px;
-            margin: 80px auto;
-            max-width: 1100px;
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            text-align: center;
+        .module-card:hover { 
+            border-color: rgba(37, 99, 235, 0.3);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(37, 99, 235, 0.1);
         }
-        .stat-item h2 { font-size: 3rem; color: var(--primary); font-weight: 800; margin-bottom: 5px; }
-        .stat-item p { font-weight: 600; color: var(--text-muted); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1px; }
-
-        /* NAVBAR BLUR */
-        .navbar {
-            backdrop-filter: blur(12px);
-            background: rgba(15, 23, 42, 0.8) !important;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-        }
-        .navbar .logo { color: white !important; }
-        .navbar .nav-links a { color: rgba(255,255,255,0.7); }
-        .navbar .nav-links a:hover { color: white; }
+        .module-card h4 { margin: 20px 0 12px 0; color: var(--text-header); font-size: 1.25rem; letter-spacing: -0.5px;}
+        .module-card p { color: var(--text-body); font-size: 0.95rem; }
 
         @media (max-width: 768px) {
-            .stats-wrapper { grid-template-columns: 1fr; gap: 40px; }
-            .hero { padding-top: 100px; clip-path: none; border-radius: 0 0 40px 40px; }
+            .mockup-body { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
 
 <!-- NAVBAR -->
-<div class="navbar">
-    <div class="logo">EduAI</div>
+<div class="navbar animate-up">
+    <a href="/" class="logo">Edu<span>AI</span></a>
     <div class="nav-links">
         <a href="#features">Capabilities</a>
         <a href="#workflow">Workflow</a>
-        <a href="/static/login.html" class="primary-btn" style="padding: 10px 24px; font-size: 0.85rem;">Sign In</a>
+        <a href="/static/login.html" class="primary-btn" style="padding: 10px 24px;">Sign In</a>
     </div>
 </div>
 
 <!-- HERO -->
 <div class="hero">
-    <h1>Next-Gen Academic Evaluation</h1>
-    <p>
-        The institutional standard for AI-powered descriptive answer grading. 
-        Transforming traditional assessments with semantic NLP and real-time faculty management.
+    <h1 class="animate-up">Intelligent Assignment Grading</h1>
+    <p class="animate-up delay-100" style="max-width: 800px; margin-bottom: 25px;">
+        The institutional standard for AI-powered descriptive answer evaluation. <br>
+        Transforming traditional assessments with state-of-the-art semantic NLP.
     </p>
 </div>
 
-<!-- PORTAL ENTRY POINTS -->
+
+<!-- PORTAL ENTRY POINTS (Vanilla Tilt added via JS at bottom) -->
 <div class="portal-grid">
-    <div class="portal-card">
+    <div class="portal-card animate-up" data-tilt data-tilt-max="5" data-tilt-speed="400" data-tilt-glare="true" data-tilt-max-glare="0.2">
         <span class="portal-icon">🎓</span>
         <h3>Student Portal</h3>
-        <p>Participate in scheduled assessments, upload submissions, and track your performance history.</p>
-        <a href="/static/login.html" class="primary-btn">Log In to Portal</a>
+        <p>Participate in scheduled assessments, upload secure PDF submissions, and track your performance history.</p>
+        <a href="/static/login.html" class="primary-btn full-width">Log In to Portal</a>
     </div>
-    <div class="portal-card">
+    <div class="portal-card animate-up delay-100" data-tilt data-tilt-max="5" data-tilt-speed="400" data-tilt-glare="true" data-tilt-max-glare="0.2">
         <span class="portal-icon">🏫</span>
         <h3>Faculty Portal</h3>
-        <p>Coordinate examinations, configure evaluation schemes, and access class analytics.</p>
-        <a href="/static/login.html" class="primary-btn">Faculty Access</a>
+        <p>Coordinate examinations, configure strict AI evaluation vectors, and access aggregate class analytics.</p>
+        <a href="/static/login.html" class="secondary-btn" style="width: 100%;">Faculty Access</a>
     </div>
 </div>
 
 <!-- FEATURES -->
 <div class="container" id="features">
-    <div style="text-align: center; margin-bottom: 60px;">
-        <span style="color: var(--primary); font-weight: 800; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 2px;">Professional Features</span>
-        <h2 style="font-size: 2rem; color: var(--text-header); margin-top: 10px;">Intelligent Grading Infrastructure</h2>
+    <div style="text-align: center; margin-bottom: 70px;" class="animate-up">
+        <span style="color: var(--accent); font-weight: 800; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 2px;">Professional Features</span>
+        <h2 style="font-size: 2.5rem; letter-spacing: -1px; margin-top: 15px; color: var(--text-header);">Intelligent Infrastructure</h2>
     </div>
 
     <div class="feature-grid">
-        <div class="module-card">
-            <div style="font-size: 2rem;">🧠</div>
+        <div class="module-card animate-up">
+            <div style="margin-bottom:15px; color: var(--accent);">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2Z"/>
+                    <path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 14.5 2Z"/>
+                </svg>
+            </div>
             <h4>Semantic Evaluation</h4>
-            <p style="font-size: 0.9rem; color: var(--text-muted);">Goes beyond keywords using sentence transformer models to understand content context.</p>
+            <p>Goes incredibly beyond rigid keywords using local sentence transformer models to actively evaluate concept understanding.</p>
         </div>
-        <div class="module-card">
-            <div style="font-size: 2rem;">📂</div>
-            <h4>Hybrid Interface</h4>
-            <p style="font-size: 0.9rem; color: var(--text-muted);">Supports rich-text typing or professional PDF/DOCX uploads for handwritten script digitizing.</p>
+        <div class="module-card animate-up delay-100">
+            <div style="margin-bottom:15px; color: var(--accent);">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                    <line x1="8" y1="13" x2="16" y2="13"/>
+                    <line x1="8" y1="17" x2="16" y2="17"/>
+                    <line x1="10" y1="9" x2="8" y2="9"/>
+                </svg>
+            </div>
+            <h4>Hybrid Digitizer</h4>
+            <p>Supports native rich-text editor typing or a robust Tesseract-driven automated OCR for digitizing messy handwritten scripts.</p>
         </div>
-        <div class="module-card">
-            <div style="font-size: 2rem;">⚡</div>
+        <div class="module-card animate-up delay-200">
+            <div style="margin-bottom:15px; color: var(--accent);">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                </svg>
+            </div>
             <h4>Instant Insights</h4>
-            <p style="font-size: 0.9rem; color: var(--text-muted);">Drastic reduction in grading cycles with immediate result generation for both students and staff.</p>
+            <p>Drastically reduce institutional grading cycles with real-time semantic analysis and immediate detailed explanations.</p>
         </div>
     </div>
 </div>
 
 <!-- WORKFLOW -->
-<div class="container" id="workflow" style="margin-top: 100px;">
-    <div style="text-align: center; margin-bottom: 60px;">
-        <span style="color: var(--primary); font-weight: 800; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 2px;">Deployment</span>
-        <h2 style="font-size: 2rem; color: var(--text-header); margin-top: 10px;">Three-Step Academic Cycle</h2>
+<div class="container" id="workflow" style="margin-top: 120px; margin-bottom: 120px;">
+    <div style="text-align: center; margin-bottom: 70px;" class="animate-up">
+        <span style="color: var(--accent); font-weight: 800; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 2px;">Deployment</span>
+        <h2 style="font-size: 2.5rem; letter-spacing: -1px; margin-top: 15px; color: var(--text-header);">Three-Step Academic Cycle</h2>
     </div>
 
     <div class="workflow-grid">
-        <div class="module-card">
-            <h4>01. Enrollment</h4>
-            <p style="font-size: 0.9rem; color: var(--text-muted);">Faculty uploads the question paper and links the authoritative marking logic.</p>
+        <div class="module-card animate-up">
+            <h4 style="color: var(--accent); font-size: 1.5rem; margin-bottom: 5px;">01</h4>
+            <h4 style="margin-top: 0;">Enrollment</h4>
+            <p>Faculty securely uploads the question paper and links the authoritative digital marking vector.</p>
         </div>
-        <div class="module-card">
-            <h4>02. Participation</h4>
-            <p style="font-size: 0.9rem; color: var(--text-muted);">Students enter the secure digital environment to complete scheduled assessments.</p>
+        <div class="module-card animate-up delay-100">
+            <h4 style="color: var(--accent); font-size: 1.5rem; margin-bottom: 5px;">02</h4>
+            <h4 style="margin-top: 0;">Participation</h4>
+            <p>Students enter the secured digital environment to complete and upload their scheduled assessments.</p>
         </div>
-        <div class="module-card">
-            <h4>03. Certification</h4>
-            <p style="font-size: 0.9rem; color: var(--text-muted);">AI compares inputs against the scheme to produce a detailed statement of results.</p>
+        <div class="module-card animate-up delay-200">
+            <h4 style="color: var(--accent); font-size: 1.5rem; margin-bottom: 5px;">03</h4>
+            <h4 style="margin-top: 0;">Certification</h4>
+            <p>The offline AI Engine compares physical inputs against the scheme to instantly produce a detailed statement of results.</p>
         </div>
     </div>
 </div>
 
 <!-- FOOTER -->
-<footer style="padding: 60px 20px; border-top: 1px solid var(--border); text-align: center;">
-    <div class="logo" style="color: var(--primary); margin-bottom: 20px;">EduAI</div>
-    <p style="color: var(--text-muted); font-size: 0.85rem;">
-        © 2026 EduAI Institutional Assessment Systems.
+<footer style="padding: 60px 20px; border-top: 1px solid var(--border); text-align: center; background: #ffffff;">
+    <div class="logo" style="font-family: 'Outfit'; font-weight: 800; font-size: 1.8rem; margin-bottom: 15px; letter-spacing: -0.5px; color: var(--primary);">Edu<span style="color:var(--accent);">AI</span></div>
+    <p style="color: var(--text-muted); font-size: 0.9rem; font-weight: 500;">
+        © 2026 EduAI Institutional Assessment Systems. Strictly local. No data leaves the device.
     </p>
 </footer>
+
+<!-- INTERSECTION OBSERVER & TYPEWRITER SCRIPT -->
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // --- SCROLL ANIMATIONS ---
+        const observerOptions = {
+            root: null,
+            rootMargin: '0px',
+            threshold: 0.15 
+        };
+
+        const observer = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('is-visible');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        const animatedElements = document.querySelectorAll('.animate-up');
+        animatedElements.forEach(el => observer.observe(el));
+    });
+</script>
 
 </body>
 </html>
