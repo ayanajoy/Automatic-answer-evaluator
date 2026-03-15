@@ -7,3 +7,6 @@ nltk
 scikit-learn
 pdfplumber
 python-docx
+pandas
+numpy
+python-multipart
