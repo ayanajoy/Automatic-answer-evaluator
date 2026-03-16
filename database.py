@@ -350,3 +350,41 @@ def login_user(email, password):
     conn.close()
 
     return user
+
+# ============================================
+# GET STUDENT ANALYTICS
+# ============================================
+def get_student_analytics(student_id):
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    # Aggregate the marks obtained and total possible marks per paper the student has submitted
+    cursor.execute("""
+    SELECT 
+        question_papers.exam_title,
+        question_papers.subject_name,
+        question_papers.total_marks as max_marks,
+        SUM(submissions.marks_awarded) as marks_obtained,
+        MAX(submissions.submitted_at) as submission_date
+    FROM submissions
+    JOIN question_papers ON submissions.paper_id = question_papers.id
+    WHERE submissions.student_id = ?
+    GROUP BY submissions.paper_id, substr(submissions.submitted_at, 1, 16)
+    ORDER BY submission_date ASC
+    """, (student_id,))
+
+    results = cursor.fetchall()
+    conn.close()
+
+    history = []
+    for r in results:
+        history.append({
+            "exam_title": r[0],
+            "subject": r[1],
+            "max": float(r[2]),
+            "obtained": float(r[3]),
+            "percentage": round((float(r[3]) / float(r[2])) * 100, 2) if r[2] else 0,
+            "date": r[4]
+        })
+
+    return history
