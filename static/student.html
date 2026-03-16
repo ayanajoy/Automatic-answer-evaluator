@@ -211,7 +211,7 @@
     <div class="nav-links">
         <a href="#" onclick="showDashboard()" class="active">Dashboard</a>
         <a href="#" onclick="openExamSection()">Take Exam</a>
-        <a href="#result" onclick="document.getElementById('result').scrollIntoView()">My Results</a>
+        <a href="#" onclick="showAnalytics()">My Results</a>
     </div>
     <div style="display:flex; gap:15px; align-items:center;">
         <div id="studentName" style="font-weight: 600; font-size: 0.9rem;">🎓 Loading...</div>
@@ -250,23 +250,52 @@
                 <button class="secondary-btn" onclick="showDashboard()">Close Analytics</button>
             </div>
             
-            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.5rem; margin-bottom: 2.5rem;">
-                <div class="action-card" style="padding: 1.5rem; text-align: center;">
-                    <div style="font-size: 0.9rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 1px;">Exams Taken</div>
-                    <div id="statTotalExams" style="font-size: 2.5rem; font-weight: 800; color: var(--primary); font-family: 'Merriweather', serif;">0</div>
+            <div id="analytics-content">
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.5rem; margin-bottom: 2.5rem;">
+                    <div class="action-card" style="padding: 1.5rem; text-align: center;">
+                        <div style="font-size: 0.9rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 1px;">Exams Taken</div>
+                        <div id="statTotalExams" style="font-size: 2.5rem; font-weight: 800; color: var(--primary); font-family: 'Merriweather', serif;">0</div>
+                    </div>
+                    <div class="action-card" style="padding: 1.5rem; text-align: center;">
+                        <div style="font-size: 0.9rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 1px;">Average Score</div>
+                        <div id="statAvgScore" style="font-size: 2.5rem; font-weight: 800; color: var(--success); font-family: 'Merriweather', serif;">0%</div>
+                    </div>
+                    <div class="action-card" style="padding: 1.5rem; text-align: center;">
+                        <div style="font-size: 0.9rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 1px;">Highest Score</div>
+                        <div id="statHighScore" style="font-size: 2.5rem; font-weight: 800; color: var(--accent); font-family: 'Merriweather', serif;">0%</div>
+                    </div>
                 </div>
-                <div class="action-card" style="padding: 1.5rem; text-align: center;">
-                    <div style="font-size: 0.9rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 1px;">Average Score</div>
-                    <div id="statAvgScore" style="font-size: 2.5rem; font-weight: 800; color: var(--success); font-family: 'Merriweather', serif;">0%</div>
+
+                <div style="background: var(--bg-main); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; margin-bottom: 2.5rem;">
+                    <h3 style="color: var(--text-header); margin-bottom: 1rem; font-size: 1.1rem;">Performance Trajectory</h3>
+                    <canvas id="performanceChart" height="100"></canvas>
                 </div>
-                <div class="action-card" style="padding: 1.5rem; text-align: center;">
-                    <div style="font-size: 0.9rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 1px;">Highest Score</div>
-                    <div id="statHighScore" style="font-size: 2.5rem; font-weight: 800; color: var(--accent); font-family: 'Merriweather', serif;">0%</div>
+
+                <div class="section" style="padding: 2rem; border-radius: 12px;">
+                    <h3 style="color: var(--text-header); margin-bottom: 1.5rem; font-size: 1.2rem; font-family: 'Merriweather', serif;">Past Submissions Archive</h3>
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                            <thead>
+                                <tr style="border-bottom: 2px solid var(--border);">
+                                    <th style="padding: 1rem; color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px;">Module</th>
+                                    <th style="padding: 1rem; color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px;">Exam Title</th>
+                                    <th style="padding: 1rem; color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px;">Date Completed</th>
+                                    <th style="padding: 1rem; color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px;">Final Score</th>
+                                </tr>
+                            </thead>
+                            <tbody id="archiveTableBody">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
-
-            <div style="background: var(--bg-main); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem;">
-                <canvas id="performanceChart" height="100"></canvas>
+            
+            <div id="analytics-empty-state" style="display:none; text-align: center; padding: 4rem 2rem; background: var(--bg-main); border-radius: 16px; border: 2px dashed var(--border);">
+                <div style="font-size: 4rem; margin-bottom: 1rem;">📈</div>
+                <h3 style="font-family: 'Merriweather', serif; color: var(--text-header); font-size: 1.8rem; margin-bottom: 0.5rem; font-weight: 800;">No Academic Data Yet</h3>
+                <p style="color: var(--text-muted); font-size: 1.1rem; max-width: 500px; margin: 0 auto 2rem auto;">Your academic journey begins here. Complete your first examination to unlock detailed AI-driven analytics, performance trajectories, and history archives.</p>
+                <button class="primary-btn" onclick="openExamSection()">Enter Exam Hall</button>
             </div>
         </div>
     </div>
@@ -407,17 +436,55 @@ async function showAnalytics(){
         const data = await response.json();
         const history = data.history;
 
-        // Calculate Summary Stats
+        // --- EMPTY STATE TOGGLE ---
+        if (!history || history.length === 0) {
+            document.getElementById("analytics-content").style.display = "none";
+            document.getElementById("analytics-empty-state").style.display = "block";
+            return;
+        }
+
+        document.getElementById("analytics-content").style.display = "block";
+        document.getElementById("analytics-empty-state").style.display = "none";
+
+        // --- Calculate Summary Stats ---
         document.getElementById("statTotalExams").innerText = history.length;
         
         let totalObtained = 0;
         let totalMax = 0;
         let highestPct = 0;
         
+        const tbody = document.getElementById("archiveTableBody");
+        tbody.innerHTML = "";
+
         history.forEach(h => {
             totalObtained += h.obtained;
             totalMax += h.max;
             if(h.percentage > highestPct) highestPct = h.percentage;
+
+            // Generate row for Past Submissions Archive
+            let dateStr = "N/A";
+            if(h.date) {
+                const d = new Date(h.date);
+                dateStr = d.toLocaleDateString() + " " + d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            }
+
+            let badgeColor = 'var(--primary)';
+            if(h.percentage < 40) badgeColor = 'var(--danger)';
+            else if(h.percentage < 70) badgeColor = 'var(--warning)';
+            else if(h.percentage >= 90) badgeColor = 'var(--success)';
+
+            tbody.innerHTML += `
+                <tr style="border-bottom: 1px solid var(--border);">
+                    <td style="padding: 1rem; font-weight: 600; color: var(--text-header);">${h.subject}</td>
+                    <td style="padding: 1rem; color: var(--text-body);">${h.exam_title}</td>
+                    <td style="padding: 1rem; color: var(--text-muted); font-size: 0.9rem;">${dateStr}</td>
+                    <td style="padding: 1rem;">
+                        <span style="background: ${badgeColor}15; color: ${badgeColor}; padding: 0.3rem 0.8rem; border-radius: 99px; font-weight: 700; font-size: 0.85rem;">
+                            ${h.percentage.toFixed(1)}%
+                        </span>
+                    </td>
+                </tr>
+            `;
         });
 
         // Compute true average: (Total Obtained / Total Max Allowed) * 100
@@ -599,31 +666,39 @@ async function submitPaper(){
             document.getElementById("exam-interface").style.display="none";
             document.getElementById("result").style.display="block";
             
-            // Map results to UI
-            document.getElementById("resultMarks").innerText = Number(data.total_obtained).toFixed(2) + " / " + data.total_marks;
-            const container = document.getElementById("questionMarks");
+// Map results to UI with Progress Bars
+document.getElementById("resultMarks").innerText = Number(data.total_obtained).toFixed(2) + " / " + data.total_marks;
+const container = document.getElementById("questionMarks");
 
-container.innerHTML = "<h3 style='margin-bottom:10px'>Marks Awarded Per Question</h3>";
+container.innerHTML = "<h3 style='margin-bottom:1.5rem; color: var(--text-header); text-align: left;'>Marks Awarded Per Question</h3>";
 
 data.details.forEach(q => {
+    // Determine progress bar state
+    const pct = (q.marks_awarded / q.max_marks) * 100;
+    let barColor = 'var(--primary)';
+    if (pct < 40) barColor = 'var(--danger)';
+    else if (pct < 70) barColor = 'var(--warning)';
+    else if (pct >= 90) barColor = 'var(--success)';
 
-container.innerHTML += `
-<div style="background:var(--bg-main); padding:15px; border-radius:12px; margin-bottom:12px;">
+    container.innerHTML += `
+    <div style="background:var(--bg-main); padding:1.5rem; border-radius:12px; margin-bottom:1rem; border: 1px solid var(--border); text-align: left;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 0.75rem;">
+            <strong style="font-size: 1.1rem; color: var(--text-header);">Question ${q.question}</strong>
+            <span style="font-weight:800; font-size: 1.1rem;" style="color: ${barColor}">
+                ${q.marks_awarded.toFixed(2)} <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 500;">/ ${q.max_marks}</span>
+            </span>
+        </div>
+        
+        <!-- Score Progress Bar -->
+        <div style="width: 100%; height: 8px; background: #e5e7eb; border-radius: 4px; margin-bottom: 1rem; overflow: hidden;">
+            <div style="height: 100%; width: ${pct}%; background: ${barColor}; border-radius: 4px; transition: width 1s ease-in-out;"></div>
+        </div>
 
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-        <strong>Question ${q.question}</strong>
-        <span style="color:var(--primary); font-weight:700;">
-            ${q.marks_awarded.toFixed(2)} / ${q.max_marks}
-        </span>
+        <div style="font-size:0.95rem; color:var(--text-body); line-height: 1.6;">
+            <span style="font-weight: 600; color: var(--text-header);">AI Feedback:</span> ${q.explanation}
+        </div>
     </div>
-
-    <div style="margin-top:6px; font-size:13px; color:#475569;">
-        <strong>AI Feedback:</strong> ${q.explanation}
-    </div>
-
-</div>
-`;
-
+    `;
 });
             confetti({ particleCount:150, spread:70, origin:{y:0.6} });
         }, 500); // Brief pause at 100% for visual satisfaction
