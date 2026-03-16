@@ -21,6 +21,7 @@
             --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
             --danger: #ef4444;
             --success: #10b981;
+            --warning: #f59e0b;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', system-ui, -apple-system, sans-serif; }
@@ -145,6 +146,7 @@
                 <div class="nav-item active" onclick="switchTab('overview', this)"><span>🏛️</span> Overview</div>
                 <div class="nav-item" id="nav-registry" onclick="switchTab('papers-section', this)"><span>📂</span> Paper Registry</div>
                 <div class="nav-item" id="nav-upload" onclick="switchTab('upload-section', this)"><span>📝</span> Initialize Assessment</div>
+                <div class="nav-item" id="nav-results" onclick="switchTab('results-section', this)"><span>📊</span> Results Dashboard</div>
             </nav>
 
             <div class="sidebar-card">
@@ -233,6 +235,61 @@
                     </div>
                 </div>
             </section>
+
+            <section id="results-section" class="tab-section">
+                <div class="page-header" style="display: flex; justify-content: space-between; align-items: flex-end;">
+                    <div>
+                        <h1>Results Dashboard</h1>
+                        <p id="resultsPaperLabel" style="color: var(--secondary); margin-top: 4px;">Select a paper from the registry to view results.</p>
+                    </div>
+                    <button class="secondary-btn" onclick="document.getElementById('nav-registry').click()">← Back to Registry</button>
+                </div>
+
+                <!-- Empty State -->
+                <div id="results-empty" style="text-align: center; padding: 5rem 2rem; background: var(--bg-card); border: 2px dashed var(--border); border-radius: 16px;">
+                    <div style="font-size: 3.5rem; margin-bottom: 1rem;">🎓</div>
+                    <h3 style="font-family: 'Merriweather', serif; color: var(--text-header); margin-bottom: 0.5rem;">No Submissions Yet</h3>
+                    <p style="color: var(--secondary); max-width: 400px; margin: 0 auto;">No students have submitted answers for this assessment yet.</p>
+                </div>
+
+                <!-- Analytics Cards -->
+                <div id="results-content" style="display: none;">
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-bottom: 2rem;">
+                        <div class="hub-card" style="cursor: default; text-align: center;">
+                            <span class="icon" style="font-size:2rem;">👥</span>
+                            <h3 style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; color: var(--secondary);">Total Submissions</h3>
+                            <div id="statSubmissions" style="font-size: 2.8rem; font-weight: 800; color: var(--primary); font-family: 'Merriweather', serif;">0</div>
+                        </div>
+                        <div class="hub-card" style="cursor: default; text-align: center;">
+                            <span class="icon" style="font-size:2rem;">📈</span>
+                            <h3 style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; color: var(--secondary);">Class Average</h3>
+                            <div id="statAverage" style="font-size: 2.8rem; font-weight: 800; color: var(--success); font-family: 'Merriweather', serif;">0%</div>
+                        </div>
+                        <div class="hub-card" style="cursor: default; text-align: center;">
+                            <span class="icon" style="font-size:2rem;">🏆</span>
+                            <h3 style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; color: var(--secondary);">Highest Score</h3>
+                            <div id="statHighest" style="font-size: 2.8rem; font-weight: 800; color: var(--accent); font-family: 'Merriweather', serif;">0%</div>
+                        </div>
+                    </div>
+
+                    <!-- Leaderboard Table -->
+                    <div class="registry-container">
+                        <table class="registry-table">
+                            <thead>
+                                <tr>
+                                    <th>Student ID</th>
+                                    <th>Submitted At</th>
+                                    <th>Question No.</th>
+                                    <th>Marks Awarded</th>
+                                    <th>Score Bar</th>
+                                </tr>
+                            </thead>
+                            <tbody id="resultsBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
         </main>
     </div>
 </div>
@@ -298,8 +355,9 @@
                     </span>
                 </td>
                 <td>
-                    <div style="display:flex; gap:8px;">
+                    <div style="display:flex; gap:8px; flex-wrap: wrap;">
                         <button class="secondary-btn btn-mini" onclick="openSchemeUpload(${paper[0]})">${hasScheme ? 'Edit Key' : 'Link'}</button>
+                        <button class="secondary-btn btn-mini" style="color:var(--accent); border-color:rgba(44,122,123,0.3)" onclick="openResults(${paper[0]}, '${paper[1]} &mdash; ${paper[2]}')">📊 Results</button>
                         <button class="secondary-btn btn-mini" style="color:var(--danger); border-color:#fee2e2" onclick="deletePaper(${paper[0]})">Delete</button>
                     </div>
                 </td>
@@ -336,6 +394,71 @@
     }
 
     window.onload = loadPapers;
+
+    async function openResults(paperId, title) {
+        document.getElementById('nav-results').click();
+        document.getElementById('resultsPaperLabel').innerText = title;
+
+        // Fetch submissions in parallel
+        const subRes = await fetch(`/teacher/submissions/${paperId}`);
+        const submissions = await subRes.json();
+
+        const body = document.getElementById('resultsBody');
+        body.innerHTML = '';
+
+        if (!submissions || submissions.length === 0) {
+            document.getElementById('results-empty').style.display = 'block';
+            document.getElementById('results-content').style.display = 'none';
+            return;
+        }
+
+        document.getElementById('results-empty').style.display = 'none';
+        document.getElementById('results-content').style.display = 'block';
+
+        // Group by student to calculate totals
+        const studentTotals = {};
+        submissions.forEach(s => {
+            // s = [id, student_id, paper_id, question_number, marks_awarded, max_marks, submitted_at]
+            if (!studentTotals[s[1]]) studentTotals[s[1]] = { obtained: 0, max: 0 };
+            studentTotals[s[1]].obtained += s[4];
+            studentTotals[s[1]].max += s[5];
+        });
+
+        const studentPcts = Object.values(studentTotals).map(t => t.max > 0 ? ((t.obtained / t.max) * 100) : 0);
+        const avgPct = studentPcts.length ? (studentPcts.reduce((a, b) => a + b, 0) / studentPcts.length).toFixed(1) : 0;
+        const highPct = studentPcts.length ? Math.max(...studentPcts).toFixed(1) : 0;
+
+        document.getElementById('statSubmissions').innerText = Object.keys(studentTotals).length;
+        document.getElementById('statAverage').innerText = avgPct + '%';
+        document.getElementById('statHighest').innerText = highPct + '%';
+
+        // Render each submission row
+        submissions.forEach(s => {
+            const pct = s[5] > 0 ? ((s[4] / s[5]) * 100) : 0;
+            let barColor = '#2c7a7b';
+            if (pct < 40) barColor = '#ef4444';
+            else if (pct < 70) barColor = '#f59e0b';
+
+            let dateStr = 'N/A';
+            if (s[6]) {
+                const d = new Date(s[6]);
+                dateStr = d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+            }
+
+            body.innerHTML += `
+            <tr>
+                <td style="font-weight: 700; color: var(--primary);">Student #${s[1]}</td>
+                <td style="color: var(--secondary); font-size: 0.9rem;">${dateStr}</td>
+                <td style="font-weight: 600;">Q${s[3]}</td>
+                <td><strong>${parseFloat(s[4]).toFixed(2)}</strong> <span style="color:var(--secondary); font-size:0.85rem;">/ ${s[5]}</span></td>
+                <td style="min-width: 150px;">
+                    <div style="height: 8px; background: #e5e7eb; border-radius: 4px; overflow: hidden;">
+                        <div style="height:100%; width:${pct.toFixed(1)}%; background: ${barColor}; border-radius: 4px; transition: width 0.8s ease;"></div>
+                    </div>
+                </td>
+            </tr>`;
+        });
+    }
 </script>
 </body>
 </html>
