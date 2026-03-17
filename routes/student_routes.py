@@ -1,6 +1,7 @@
-from fastapi import APIRouter, Form, UploadFile, File
 import json
 import re
+import os
+import shutil
 import pdfplumber
 from docx import Document
 
@@ -62,6 +63,10 @@ async def submit_paper(
     answers: str = Form(None),
     file: UploadFile = File(None)
 ):
+    # Setup permanent storage
+    STUDENT_SUBMISSION_FOLDER = "uploads/student_submissions"
+    os.makedirs(STUDENT_SUBMISSION_FOLDER, exist_ok=True)
+    stored_file_path = None
 
     # ---------------------------------------
     # VALIDATE PAPER
@@ -147,6 +152,11 @@ async def submit_paper(
 
         else:
             return {"error": "Unsupported file type."}
+
+        # Save the file permanently
+        stored_file_path = os.path.join(STUDENT_SUBMISSION_FOLDER, f"S{student_id}_P{paper_id}_{file.filename}")
+        with open(stored_file_path, "wb") as buffer:
+            buffer.write(file_content)
 
         # ---------------------------------------
         # DEBUG: SHOW OCR TEXT
@@ -260,7 +270,8 @@ async def submit_paper(
             q_no,
             student_answer,
             float(breakdown["semantic"]),
-            float(obtained)
+            float(obtained),
+            stored_file_path
         )
 
     return {
