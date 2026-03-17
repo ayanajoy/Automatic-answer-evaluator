@@ -77,6 +77,7 @@ def initialize_database():
         similarity REAL,
         marks_awarded REAL,
         submitted_at TEXT NOT NULL,
+        submission_file TEXT,
         FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE,
         FOREIGN KEY (paper_id) REFERENCES question_papers(id) ON DELETE CASCADE
     )
@@ -117,7 +118,12 @@ def get_all_question_papers():
     conn = get_connection()
     cursor = conn.cursor()
 
-    cursor.execute("SELECT * FROM question_papers ORDER BY id DESC")
+    # Optimized to check for scheme existence in one go
+    cursor.execute("""
+    SELECT qp.*, (SELECT COUNT(*) FROM answer_schemes WHERE paper_id = qp.id) > 0 as has_scheme
+    FROM question_papers qp
+    ORDER BY qp.id DESC
+    """)
     papers = cursor.fetchall()
 
     conn.close()
@@ -203,7 +209,7 @@ def get_all_students():
 # SUBMISSION FUNCTIONS
 # ==================================================
 def add_submission(student_id, paper_id, question_number,
-                   student_answer, similarity, marks_awarded):
+                   student_answer, similarity, marks_awarded, submission_file=None):
 
     conn = get_connection()
     cursor = conn.cursor()
@@ -211,8 +217,8 @@ def add_submission(student_id, paper_id, question_number,
     cursor.execute("""
     INSERT INTO submissions
     (student_id, paper_id, question_number,
-     student_answer, similarity, marks_awarded, submitted_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
+     student_answer, similarity, marks_awarded, submitted_at, submission_file)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     """, (
         student_id,
         paper_id,
@@ -220,7 +226,8 @@ def add_submission(student_id, paper_id, question_number,
         student_answer,
         similarity,
         marks_awarded,
-        datetime.utcnow().isoformat()
+        datetime.utcnow().isoformat(),
+        submission_file
     ))
 
     conn.commit()
@@ -286,9 +293,13 @@ def get_submissions_by_paper(paper_id):
            submissions.question_number,
            submissions.similarity,
            submissions.marks_awarded,
-           submissions.submitted_at
+           submissions.submitted_at,
+           question_papers.total_marks,
+           submissions.student_answer,
+           submissions.submission_file
     FROM submissions
     JOIN students ON submissions.student_id = students.id
+    JOIN question_papers ON submissions.paper_id = question_papers.id
     WHERE submissions.paper_id = ?
     ORDER BY submissions.submitted_at DESC
     """, (paper_id,))
