@@ -216,7 +216,7 @@ def get_all_students():
 # SUBMISSION FUNCTIONS
 # ==================================================
 def add_submission(student_id, paper_id, question_number,
-                   student_answer, similarity, marks_awarded, submission_file=None):
+                   student_answer, similarity, marks_awarded, submission_file=None, submitted_at=None):
 
     conn = get_connection()
     cursor = conn.cursor()
@@ -233,7 +233,7 @@ def add_submission(student_id, paper_id, question_number,
         student_answer,
         similarity,
         marks_awarded,
-        datetime.utcnow().isoformat(),
+        submitted_at if submitted_at else datetime.utcnow().isoformat(),
         submission_file
     ))
 
@@ -387,7 +387,7 @@ def get_student_analytics(student_id):
     FROM submissions
     JOIN question_papers ON submissions.paper_id = question_papers.id
     WHERE submissions.student_id = ?
-    GROUP BY submissions.paper_id, substr(submissions.submitted_at, 1, 16)
+    GROUP BY submissions.paper_id, submissions.submitted_at
     ORDER BY submission_date ASC
     """, (student_id,))
 
