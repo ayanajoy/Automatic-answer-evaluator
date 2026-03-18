@@ -82,6 +82,13 @@ def initialize_database():
         FOREIGN KEY (paper_id) REFERENCES question_papers(id) ON DELETE CASCADE
     )
     """)
+    # ---------------------------------------
+    # MIGRATION: Ensure submission_file exists
+    # ---------------------------------------
+    try:
+        cursor.execute("ALTER TABLE submissions ADD COLUMN submission_file TEXT")
+    except sqlite3.OperationalError:
+        pass # Already exists
 
     conn.commit()
     conn.close()
