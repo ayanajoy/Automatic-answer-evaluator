@@ -349,6 +349,7 @@
                                     <th>Student Name</th>
                                     <th>Submission Period</th>
                                     <th>Score Summary</th>
+                                    <th>Answer Paper</th>
                                     <th>Performance</th>
                                     <th>Action</th>
                                 </tr>
@@ -526,9 +527,11 @@
         document.getElementById('nav-results').click();
         document.getElementById('resultsPaperLabel').innerText = title;
 
-        // Fetch submissions in parallel
         const subRes = await fetch(`/teacher/submissions/${paperId}`);
         const submissions = await subRes.json();
+        
+        const analyticsRes = await fetch(`/teacher/analytics/${paperId}`);
+        const analytics = await analyticsRes.json();
 
         const body = document.getElementById('resultsBody');
         body.innerHTML = '';
@@ -542,87 +545,90 @@
         document.getElementById('results-empty').style.display = 'none';
         document.getElementById('results-content').style.display = 'block';
 
-        // Aggregate stats student-wise 
-        const studentAggs = {};
+        // Update top-level status cards from unified analytics endpoint
+        if (!analytics.error) {
+            document.getElementById('statSubmissions').innerText = analytics.total_submissions;
+            // Show average as percentage of total marks
+            const avgPct = (analytics.average / analytics.max_marks * 100).toFixed(1);
+            const highPct = (analytics.highest / analytics.max_marks * 100).toFixed(1);
+            document.getElementById('statAverage').innerText = avgPct + '%';
+            document.getElementById('statHighest').innerText = highPct + '%';
+        }
+
+        // Aggregate sessions by Student Name and Timestamp (to the second)
+        // This handles legacy data that might have varying microseconds
+        const sessions = {};
         submissions.forEach(s => {
-            if (!studentAggs[s[1]]) studentAggs[s[1]] = { obtained: 0, max: s[6] || 100 };
-            studentAggs[s[1]].obtained += parseFloat(s[4] || 0);
-        });
-
-        const studentPcts = Object.values(studentAggs).map(a => (a.obtained / a.max) * 100);
-        const avgPct = studentPcts.length ? (studentPcts.reduce((a, b) => a + b, 0) / studentPcts.length).toFixed(1) : 0;
-        const highPct = studentPcts.length ? Math.max(...studentPcts).toFixed(1) : 0;
-
-        document.getElementById('statSubmissions').innerText = Object.keys(studentAggs).length;
-        document.getElementById('statAverage').innerText = avgPct + '%';
-        document.getElementById('statHighest').innerText = highPct + '%';
-
-        // Aggregate records by student for table display
-        const studentTableData = {};
-        submissions.forEach(s => {
-            // s = [id, student_name, question_number, similarity, marks_awarded, submitted_at, total_marks, student_answer]
-            const name = s[1];
-            if (!studentTableData[name]) {
-                studentTableData[name] = {
-                    name: name,
-                    responses: [],
+            const timestamp = s[5] || "";
+            const secondGranularity = timestamp.substring(0, 19);
+            const sessionKey = s[1] + '|' + secondGranularity; 
+            
+            if (!sessions[sessionKey]) {
+                sessions[sessionKey] = {
+                    name: s[1],
+                    date: timestamp,
                     totalEarned: 0,
-                    paperMax: s[6] || 0,
-                    lastSubmitted: s[5],
-                    originalFile: s[8] // submission_file is now at index 8
+                    paperMax: s[6] || 100,
+                    responses: [],
+                    originalFile: s[8]
                 };
             }
-            studentTableData[name].responses.push({
+            sessions[sessionKey].totalEarned += parseFloat(s[4] || 0);
+            sessions[sessionKey].responses.push({
                 qNo: s[2],
                 answer: s[7],
                 marks: s[4]
             });
-            studentTableData[name].totalEarned += parseFloat(s[4]);
-            if (new Date(s[5]) > new Date(studentTableData[name].lastSubmitted)) {
-                studentTableData[name].lastSubmitted = s[5];
+            // Prefer session with a file if multiple exist in same second (unlikely)
+            if (!sessions[sessionKey].originalFile && s[8]) {
+                sessions[sessionKey].originalFile = s[8];
             }
         });
 
-        // Store globally for modal access
-        window.currentResultsData = studentTableData;
+        // Store for modals
+        window.currentResultsData = sessions;
         window.currentPaperTitle = title;
 
-        // Render aggregated rows
-        Object.values(studentTableData).forEach(agg => {
-            const pct = agg.paperMax > 0 ? ((agg.totalEarned / agg.paperMax) * 100) : 0;
+        // Render sorted by most recent first
+        const sortedSessions = Object.values(sessions).sort((a,b) => new Date(b.date) - new Date(a.date));
+
+        sortedSessions.forEach(sess => {
+            const pct = sess.paperMax > 0 ? ((sess.totalEarned / sess.paperMax) * 100) : 0;
             let barColor = 'var(--success)';
             if (pct < 40) barColor = 'var(--danger)';
             else if (pct < 70) barColor = 'var(--warning)';
             else if (pct < 85) barColor = 'var(--accent)';
 
-            let dateStr = 'Pending';
-            if (agg.lastSubmitted) {
-                const d = new Date(agg.lastSubmitted);
-                dateStr = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) + ', ' + d.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
-            }
+            const d = new Date(sess.date);
+            const dateStr = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) + ', ' + d.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+
+            const fileLink = sess.originalFile ? 
+                `<a href="/${sess.originalFile}" target="_blank" style="color:var(--accent); font-weight:700; text-decoration:none;">📄 View PDF</a>` : 
+                `<span style="color:var(--secondary); font-size:0.8rem;">Text Only</span>`;
 
             body.innerHTML += `
             <tr>
-                <td style="font-weight: 800; color: var(--primary);">${agg.name}</td>
+                <td style="font-weight: 800; color: var(--primary);">${sess.name}</td>
                 <td style="color: var(--secondary); font-size: 0.85rem; font-weight: 500;">${dateStr}</td>
-                <td><strong style="font-size: 1.1rem; color: var(--text-header);">${agg.totalEarned.toFixed(1)}</strong> <span style="color:var(--secondary); font-size:0.8rem; font-weight: 600;">/ ${agg.paperMax}</span></td>
+                <td><strong style="font-size: 1.1rem; color: var(--text-header);">${sess.totalEarned.toFixed(1)}</strong> <span style="color:var(--secondary); font-size:0.8rem; font-weight: 600;">/ ${sess.paperMax}</span></td>
+                <td>${fileLink}</td>
                 <td style="width: 160px;">
                     <div style="display: flex; align-items: center; gap: 10px;">
                         <div style="flex-grow: 1; height: 8px; background: #e2e8f0; border-radius: 99px; overflow: hidden;">
-                            <div style="height:100%; width:${pct.toFixed(1)}%; background: ${barColor};"></div>
+                            <div style="height:100%; width:${Math.min(pct, 100).toFixed(1)}%; background: ${barColor};"></div>
                         </div>
                         <span style="font-size: 0.75rem; font-weight: 800; color: var(--secondary);">${Math.round(pct)}%</span>
                     </div>
                 </td>
                 <td>
-                    <button class="secondary-btn btn-mini" style="color: var(--accent); white-space: nowrap;" onclick="viewStudentSheet('${agg.name}')">View Sheet</button>
+                    <button class="secondary-btn btn-mini" style="color: var(--accent); white-space: nowrap;" onclick="viewStudentSheet('${sess.name}|${sess.date.substring(0, 19)}')">View Sheet</button>
                 </td>
             </tr>`;
         });
     }
 
-    function viewStudentSheet(studentName) {
-        const data = window.currentResultsData[studentName];
+    function viewStudentSheet(sessionKey) {
+        const data = window.currentResultsData[sessionKey];
         if(!data) return;
 
         document.getElementById('sheetStudentName').innerText = data.name;
