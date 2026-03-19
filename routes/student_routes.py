@@ -192,6 +192,8 @@ async def submit_paper(
     total_marks = 0
     total_obtained = 0
     detailed_results = []
+    from datetime import datetime
+    submission_time = datetime.utcnow().isoformat()
 
     # If OCR text exists but answers weren't found via regex, we prepare for semantic search
     from nlp.similarity import model as emb_model
@@ -272,7 +274,8 @@ async def submit_paper(
             student_answer,
             float(breakdown["semantic"]),
             float(obtained),
-            stored_file_path
+            stored_file_path,
+            submission_time
         )
 
     return {
