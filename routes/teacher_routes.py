@@ -116,14 +116,34 @@ def get_paper_analytics(paper_id: int):
     if not submissions:
         return {"error": "No submissions yet"}
     
-    # Calculate stats
-    scores = [s[5] for s in submissions] # Assuming index 5 is marks_awarded
-    avg_score = sum(scores) / len(scores)
-    pass_count = len([s for s in scores if s >= (0.4 * 100)]) # Example 40% pass
+    # Paper total marks (index 6 in get_submissions_by_paper)
+    paper_total = submissions[0][6]
+    
+    # sessions index 1 is student name, 5 is timestamp, 4 is marks_awarded
+    sessions = {}
+    for s in submissions:
+        # Use second-level granularity for legacy data
+        ts = s[5] if s[5] else ""
+        session_key = (s[1], ts[:19]) # (Name, Timestamp to second)
+        
+        if session_key not in sessions:
+            sessions[session_key] = 0
+        sessions[session_key] += float(s[4] or 0)
+        
+    student_totals = list(sessions.values())
+    
+    if not student_totals:
+        return {"error": "No valid scores found"}
+
+    avg_score = sum(student_totals) / len(student_totals)
+    highest_score = max(student_totals)
     
     return {
         "average": round(avg_score, 2),
-        "total_students": len(submissions),
-        "pass_rate": round((pass_count / len(submissions)) * 100, 1),
-        "scores": scores
+        "highest": round(highest_score, 2),
+        "total_students": len(set(s[1] for s in submissions)),
+        "total_submissions": len(student_totals),
+        "pass_rate": round((len([s for s in student_totals if (s / paper_total) >= 0.4]) / len(student_totals)) * 100, 1) if paper_total else 0,
+        "scores": student_totals,
+        "max_marks": paper_total
     }
