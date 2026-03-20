@@ -371,8 +371,27 @@ textarea::placeholder {
     gap: 24px;
 }
 
-@media (max-width: 768px) {
-    .grid-2 {
-        grid-template-columns: 1fr;
-    }
+@media (max-width: 1024px) {
+    .container { padding: 0 40px; }
 }
+
+@media (max-width: 768px) {
+    .navbar { padding: 15px 5%; height: auto; min-height: 70px; flex-direction: column; }
+    .nav-links { margin-top: 15px; gap: 1.5rem; flex-wrap: wrap; justify-content: center; }
+    .auth-card { padding: 30px 20px; width: 95%; }
+    .grid-2 { grid-template-columns: 1fr; }
+    .container { padding: 0 15px; margin: 30px auto; }
+    .section { padding: 20px; }
+    .portal-grid { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)) !important; }
+    .hero h1 { font-size: 2.2rem; }
+    .feature-grid, .workflow-grid { grid-template-columns: 1fr !important; }
+    .modal-content { width: 95%; padding: 30px 20px; }
+}
+
+@media (max-width: 480px) {
+    .hero h1 { font-size: 1.8rem; }
+    .hero-mockup { display: none !important; }
+}
+
+.registry-container, .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
