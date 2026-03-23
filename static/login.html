@@ -65,7 +65,7 @@
         }
 
         try {
-          const response = await fetch("/login", {
+          const response = await fetch("/auth/login", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -80,6 +80,7 @@
 
           if (data.status === "success") {
             localStorage.setItem("user", JSON.stringify(data.user));
+            localStorage.setItem("access_token", data.access_token);
 
             if (data.user.role === "teacher") {
               window.location.href = "/static/teacher.html";
@@ -87,7 +88,8 @@
               window.location.href = "/static/student.html";
             }
           } else {
-            alert("⚠️ Account not found.\nPlease create an account first.");
+            const errorMsg = data.detail || data.message || "Account not found.";
+            alert("⚠️ Login Failed:\n" + errorMsg);
           }
         } catch (error) {
           alert("Server error. Please try again later.");

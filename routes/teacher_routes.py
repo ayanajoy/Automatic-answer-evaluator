@@ -1,6 +1,7 @@
-from fastapi import APIRouter, UploadFile, File, Form
+from fastapi import APIRouter, UploadFile, File, Form, Depends
 import shutil
 import os
+from dependencies import get_current_teacher
 from database import delete_question_paper
 from database import (
     add_question_paper,
@@ -10,7 +11,7 @@ from database import (
     get_submissions_by_paper
 )
 
-router = APIRouter(prefix="/teacher", tags=["Teacher"])
+router = APIRouter(prefix="/teacher", tags=["Teacher"], dependencies=[Depends(get_current_teacher)])
 
 
 # ==============================

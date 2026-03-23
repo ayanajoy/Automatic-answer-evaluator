@@ -415,6 +415,7 @@ window.onload = function(){
 
 function logout(){
     localStorage.removeItem("user");
+    localStorage.removeItem("access_token");
     window.location.href="/static/login.html";
 }
 
@@ -443,7 +444,8 @@ async function showAnalytics(){
     document.getElementById("analytics-dashboard").style.display="block";
 
     try {
-        const response = await fetch(`/student/analytics/${user.id}`);
+        const token = localStorage.getItem("access_token");
+        const response = await fetch(`/student/analytics/${user.id}`, { headers: {"Authorization": "Bearer " + token} });
         const data = await response.json();
         const history = data.history;
 
@@ -559,7 +561,8 @@ async function showAnalytics(){
 
 let allPapers = [];
 async function loadSubjects(){
-    const response = await fetch("/student/papers");
+    const token = localStorage.getItem("access_token");
+    const response = await fetch("/student/papers", { headers: {"Authorization": "Bearer " + token} });
     allPapers = await response.json();
     const subjectSelect = document.getElementById("subjectSelect");
     subjectSelect.innerHTML = "<option>Choose Department...</option>";
@@ -588,7 +591,8 @@ function populateExams(){
 async function loadQuestions(){
     const paperId = parseInt(document.getElementById("paperSelect").value);
     if(!paperId) { alert("Please select a paper"); return; }
-    const paperDetails = await fetch(`/student/paper/${paperId}`);
+    const token = localStorage.getItem("access_token");
+    const paperDetails = await fetch(`/student/paper/${paperId}`, { headers: {"Authorization": "Bearer " + token} });
     const paperData = await paperDetails.json();
     if(!paperData.is_ready){ alert("Evaluation scheme not yet published by faculty."); return; }
     document.getElementById("examTitle").innerText = paperData.exam_title;
@@ -600,7 +604,8 @@ async function loadQuestions(){
 
 async function startExam(){
     const paperId = parseInt(document.getElementById("paperSelect").value);
-    const response = await fetch(`/student/paper/${paperId}/questions`);
+    const token = localStorage.getItem("access_token");
+    const response = await fetch(`/student/paper/${paperId}/questions`, { headers: {"Authorization": "Bearer " + token} });
     const questions = await response.json();
     const container = document.getElementById("questionsContainer");
     container.innerHTML = "";
@@ -665,7 +670,22 @@ async function submitPaper(){
     }
 
     try {
-        const response = await fetch("/student/submit-paper",{ method:"POST", body:formData });
+        const token = localStorage.getItem("access_token");
+        const response = await fetch("/student/submit-paper",{ method:"POST", body:formData, headers: {"Authorization": "Bearer " + token} });
+        
+        if (!response.ok) {
+            clearInterval(interval);
+            overlay.style.display="none";
+            const err = await response.json();
+            if (response.status === 401) {
+                alert("Session expired. Please log in again.");
+                logout();
+            } else {
+                alert("Submission failed: " + (err.detail || err.error || "Unknown error"));
+            }
+            return;
+        }
+
         const data = await response.json();
         
         // --- FINISH PROGRESS ---
@@ -678,6 +698,10 @@ async function submitPaper(){
             document.getElementById("result").style.display="block";
             
 // Map results to UI with Progress Bars
+if (!data.details) {
+    alert("Evaluation completed but no details were returned. Please check if the answer scheme is correctly formatted.");
+    return;
+}
 document.getElementById("resultMarks").innerText = Number(data.total_obtained).toFixed(2) + " / " + data.total_marks;
 const container = document.getElementById("questionMarks");
 
