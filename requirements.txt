@@ -1,5 +1,6 @@
 fastapi
 uvicorn
+python-multipart
 sentence-transformers
 transformers
 torch>=2.4
@@ -9,7 +10,8 @@ pdfplumber
 python-docx
 pandas
 numpy
-python-multipart
-pytesseract
+easyocr
 pdf2image
+python-jose[cryptography]
+passlib[bcrypt]
 opencv-python
