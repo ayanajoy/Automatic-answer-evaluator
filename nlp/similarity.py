@@ -5,225 +5,196 @@ import re
 import nltk
 from .preprocess import preprocess
 
-# Load model once
-model = SentenceTransformer('all-MiniLM-L6-v2')
+import os
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Load model once with error handling for network issues
+MODEL_NAME = 'all-MiniLM-L6-v2'
+
+try:
+    logger.info(f"Loading SentenceTransformer model: {MODEL_NAME}")
+    model = SentenceTransformer(MODEL_NAME)
+except Exception as e:
+    logger.warning(f"Failed to load model from Hugging Face Hub: {e}")
+    logger.info("Attempting to load in offline mode...")
+    try:
+        # Set offline mode if initial load fails (likely DNS/Network issue)
+        os.environ["HF_HUB_OFFLINE"] = "1"
+        model = SentenceTransformer(MODEL_NAME)
+        logger.info("Successfully loaded model from local cache.")
+    except Exception as e_offline:
+        logger.error(f"Critical Error: Could not load model even from cache. {e_offline}")
+        logger.error("Please ensure you have an active internet connection for the first-time setup or the model is manually downloaded.")
+        # Fallback or raise a more descriptive error
+        raise RuntimeError(
+            "Model loading failed. If this is the first run, you need internet to download the model. "
+            "Check your connection or DNS settings. Once downloaded, the app can run offline."
+        ) from e_offline
 
 # Ensure tokenizer available
 nltk.download('punkt', quiet=True)
-
 
 # ==========================================
 # Split sentences properly using NLTK
 # ==========================================
 def split_sentences(text):
-
     sentences = nltk.sent_tokenize(text)
-
     cleaned = []
-
     for s in sentences:
         s = s.strip()
         if len(s) > 3:
             cleaned.append(s)
-
     return cleaned
-
 
 # ==========================================
 # Detect negation words
 # ==========================================
 def get_negation_count(text):
-
-    negations = [
-        "not",
-        "no",
-        "never",
-        "don't",
-        "cannot",
-        "neither",
-        "nor"
-    ]
-
+    negations = ["not", "no", "never", "don't", "cannot", "neither", "nor", "none"]
     count = 0
-
     for word in negations:
         if re.search(r'\b' + word + r'\b', text.lower()):
             count += 1
-
     return count
 
-
 # ==========================================
-# Main grading function
+# Main grading function (Advanced Local NLP)
 # ==========================================
 def calculate_marks(model_answer, student_answer, total_marks):
-
+    
     # --------------------------------------
-    # Empty answer check
+    # 1. Edge Case: Empty Answer
     # --------------------------------------
     if not student_answer.strip():
         return 0.0, {
-            "semantic": 0,
-            "keyword": 0,
-            "length": 0,
-            "concept_coverage": "0/0"
+            "semantic": 0, "keyword": 0, "length": 0, 
+            "concept_coverage": "0/0", "is_llm": False, 
+            "explanation": "No valid answer provided or OCR completely failed."
         }
-
+        
     # --------------------------------------
-    # Split model answer into concept points
+    # 2. Extract Key Concepts from Model
     # --------------------------------------
-    model_points = [
-        p.strip() for p in model_answer.split('.')
-        if len(p.strip()) > 5
-    ]
-
+    model_points = [p.strip() for p in model_answer.split('.') if len(p.strip()) > 5]
     if not model_points:
         model_points = [model_answer]
 
-    # --------------------------------------
-    # Split student answer into sentences
-    # --------------------------------------
     student_sentences = split_sentences(student_answer)
-
     if not student_sentences:
         student_sentences = [student_answer]
 
-    # --------------------------------------
-    # Encode student sentences once
-    # --------------------------------------
+    # Encode texts
     student_embeddings = model.encode(student_sentences)
-
+    model_embeddings = model.encode(model_points)
+    
+    # --------------------------------------
+    # 3. Semantic Sentence Matching (Concept Coverage)
+    # --------------------------------------
     point_scores = []
-
-    # --------------------------------------
-    # Compare each model point with best student sentence
-    # --------------------------------------
-    for point in model_points:
-
-        point_embedding = model.encode([point])
-
+    for m_emb in model_embeddings:
         best_score = 0
-
         for s_emb in student_embeddings:
-
-            sim = cosine_similarity(point_embedding, [s_emb])[0][0]
-
+            sim = cosine_similarity([m_emb], [s_emb])[0][0]
             if sim > best_score:
                 best_score = sim
-
         point_scores.append(best_score)
+        
+    # How many core concepts were explicitly addressed?
+    coverage_threshold = 0.55 # Lowered threshold to account for bad handwriting/OCR
+    covered_points = sum(1 for score in point_scores if score >= coverage_threshold)
+    
+    # Base Semantic Score
+    semantic_score = covered_points / max(len(point_scores), 1)
+    
+    # If the student wrote a good chunk that generally matches the whole answer, boost them
+    full_student_emb = model.encode([student_answer])
+    full_model_emb = model.encode([model_answer])
+    overall_sim = cosine_similarity(full_model_emb, full_student_emb)[0][0]
+    
+    # Pick the best semantic representation
+    final_semantic = max(semantic_score, overall_sim)
 
     # --------------------------------------
-    # Concept coverage scoring
-    # --------------------------------------
-    coverage_threshold = 0.6
-
-    covered_points = sum(
-        1 for score in point_scores if score >= coverage_threshold
-    )
-
-    semantic = covered_points / len(point_scores)
-
-    # --------------------------------------
-    # Keyword matching
+    # 4. Strict Keyword Matching
     # --------------------------------------
     model_words = preprocess(model_answer).split()
     student_clean = preprocess(student_answer)
-
     unique_keywords = list(set(model_words))
-
-    matched_keywords = 0
-
-    for word in unique_keywords:
-        if f" {word} " in f" {student_clean} ":
-            matched_keywords += 1
-
-    keyword = matched_keywords / len(unique_keywords) if unique_keywords else 0
+    
+    matched_keywords = sum(1 for word in unique_keywords if f" {word} " in f" {student_clean} ")
+    keyword_score = matched_keywords / len(unique_keywords) if unique_keywords else 1.0
 
     # --------------------------------------
-    # Negation penalty
+    # 5. Logical Penalties (Negations)
     # --------------------------------------
     m_neg = get_negation_count(model_answer)
     s_neg = get_negation_count(student_answer)
-
+    
+    # If model says "is" but student says "is not" -> massive penalty
     neg_penalty = 1.0
-
     if (m_neg == 0 and s_neg > 0) or (m_neg > 0 and s_neg == 0):
         neg_penalty = 0.5
 
     # --------------------------------------
-    # Length score
+    # 6. Length and Repetition Checks
     # --------------------------------------
     model_len = len(model_answer.split())
     student_len = len(student_answer.split())
-
-    length = min(student_len / model_len, 1.0)
-
-    # Penalize extremely short answers
-    if student_len < model_len * 0.3:
-        length *= 0.5
-
-    # --------------------------------------
-    # Repetition penalty
-    # --------------------------------------
-    words = student_answer.split()
-
-    if len(words) > 0:
-        unique_ratio = len(set(words)) / len(words)
-
-        if unique_ratio < 0.6:
-            repetition_penalty = 0.85
-        else:
-            repetition_penalty = 1.0
-    else:
-        repetition_penalty = 1.0
-
-    # --------------------------------------
-    # Final weighted score
-    # --------------------------------------
-    final_score = (
-        0.70 * semantic +
-        0.20 * keyword +
-        0.10 * length
-    ) * neg_penalty * repetition_penalty
-
-    marks = float(final_score * total_marks)
-
-    return round(marks, 2), {
-        "semantic": round(semantic, 3),
-        "keyword": round(keyword, 3),
-        "length": round(length, 3),
-        "concept_coverage": f"{covered_points}/{len(point_scores)}",
-        "negation_applied": neg_penalty < 1.0
-    }
     
+    length_score = min(student_len / max(model_len, 1), 1.0)
+    if student_len < model_len * 0.3:
+        length_score *= 0.5 # Too short
+        
+    words = student_answer.split()
+    unique_ratio = len(set(words)) / max(len(words), 1)
+    # If they just wrote the same word 50 times to trick the length score:
+    rep_penalty = 0.7 if unique_ratio < 0.4 else 1.0
+
+    # --------------------------------------
+    # 7. Final Weighted Calculation
+    # --------------------------------------
+    # Weighting: 65% Semantic meaning, 25% Keyword exact matches, 10% Length
+    raw_final = (0.65 * final_semantic + 0.25 * keyword_score + 0.10 * length_score)
+    final_score = raw_final * neg_penalty * rep_penalty
+    
+    # Round marks
+    marks_awarded = round(float(final_score * total_marks), 2)
+    # Don't let bad OCR drag a theoretically perfect answer down to 0
+    if marks_awarded < 0: marks_awarded = 0
+    if marks_awarded > total_marks: marks_awarded = total_marks
+
+    return marks_awarded, {
+        "semantic": round(final_semantic, 3),
+        "keyword": round(keyword_score, 3),
+        "length": round(length_score, 3),
+        "concept_coverage": f"{covered_points}/{len(point_scores)}",
+        "negation_applied": neg_penalty < 1.0,
+        "is_llm": False
+    }
+
 def generate_explanation(breakdown):
+    if breakdown.get("is_llm", False) and "explanation" in breakdown:
+        return breakdown["explanation"]
 
     explanation = []
-
-    semantic = breakdown["semantic"]
-    keyword = breakdown["keyword"]
-    length = breakdown["length"]
-
-    if semantic > 0.8:
-        explanation.append("Strong conceptual similarity with model answer.")
-    elif semantic > 0.6:
-        explanation.append("Moderate conceptual similarity detected.")
+    
+    if breakdown.get("semantic", 0) > 0.75:
+        explanation.append("Strong conceptual understanding shown.")
+    elif breakdown.get("semantic", 0) > 0.5:
+        explanation.append("Moderate understanding, but missed key nuances.")
     else:
-        explanation.append("Limited conceptual match with the expected answer.")
-
-    if keyword > 0.7:
-        explanation.append("Most important keywords are present.")
-    elif keyword > 0.4:
-        explanation.append("Some relevant keywords detected.")
-    else:
-        explanation.append("Few expected keywords were found.")
-
-    if length > 0.9:
-        explanation.append("Answer length is sufficient.")
-    elif length > 0.5:
-        explanation.append("Answer length is moderate.")
-    else:
-        explanation.append("Answer is too short compared to expected response.")
+        explanation.append("Answer lacks core concepts.")
+        
+    if breakdown.get("keyword", 0) > 0.7:
+        explanation.append("Excellent use of specific terminology.")
+    elif breakdown.get("keyword", 0) < 0.3:
+        explanation.append("Missing crucial vocabulary keywords.")
+        
+    if breakdown.get("negation_applied", False):
+        explanation.append("Logical contradiction detected (e.g. said 'not' when shouldn't).")
 
     return " ".join(explanation)

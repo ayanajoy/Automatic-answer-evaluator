@@ -3,6 +3,13 @@ import nltk
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 
+# Ensure NLTK resources are available
+nltk.download('stopwords', quiet=True)
+nltk.download('wordnet', quiet=True)
+nltk.download('omw-1.4', quiet=True)
+nltk.download('punkt', quiet=True)
+nltk.download('punkt_tab', quiet=True)
+
 lemmatizer = WordNetLemmatizer()
 stop_words = set(stopwords.words('english'))
 
