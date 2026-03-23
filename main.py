@@ -1,14 +1,36 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
-
+from fastapi.responses import FileResponse, JSONResponse
+from fastapi import Request
+import traceback
 import os
 
 from routes.teacher_routes import router as teacher_router
 from routes.student_routes import router as student_router
 from routes.auth_routes import router as auth_router
 
+from fastapi.middleware.cors import CORSMiddleware
+
 app = FastAPI()
+
+# ================= CORS =================
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# ================= GLOBAL EXCEPTION HANDLER =================
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    print("!!! GLOBAL ERROR CAUGHT !!!")
+    print(traceback.format_exc())
+    return JSONResponse(
+        status_code=500,
+        content={"status": "error", "message": str(exc)},
+    )
 
 # ensure uploads folder exists
 os.makedirs("uploads", exist_ok=True)
