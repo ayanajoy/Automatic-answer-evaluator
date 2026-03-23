@@ -26,8 +26,8 @@ def initialize_database():
     CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
-        email TEXT UNIQUE NOT NULL,
-        password TEXT NOT NULL,
+        email TEXT UNIQUE,
+        password BLOB NOT NULL,
         role TEXT NOT NULL,
         created_at TEXT NOT NULL
     )
@@ -56,13 +56,14 @@ def initialize_database():
     )
     """)
 
-    # STUDENTS
+    # STUDENTS (Linked to users.id)
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS students (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id INTEGER PRIMARY KEY,
         name TEXT NOT NULL,
         email TEXT UNIQUE,
-        created_at TEXT NOT NULL
+        created_at TEXT NOT NULL,
+        FOREIGN KEY (id) REFERENCES users(id) ON DELETE CASCADE
     )
     """)
 
@@ -328,7 +329,7 @@ def get_student_by_id(student_id):
     conn.close()
     return student
 
-def register_user(name, email, password, role):
+def register_user(name, email, password_hash, role):
     conn = get_connection()
     cursor = conn.cursor()
 
@@ -339,30 +340,38 @@ def register_user(name, email, password, role):
         """, (
             name,
             email,
-            password,
+            password_hash,
             role,
             datetime.utcnow().isoformat()
         ))
+        
+        user_id = cursor.lastrowid
+
+        if role == "student":
+            cursor.execute("""
+            INSERT INTO students (id, name, email, created_at)
+            VALUES (?, ?, ?, ?)
+            """, (user_id, name, email, datetime.utcnow().isoformat()))
 
         conn.commit()
         conn.close()
         return True
 
-    except:
+    except Exception as e:
+        print(f"Registration Error: {e}")
         conn.close()
         return False
 
 
-def login_user(email, password):
-
+def get_user_by_email(email):
     conn = get_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
-    SELECT id,name,role,email
+    SELECT id, name, email, role, password
     FROM users
-    WHERE email=? AND password=?
-    """, (email, password))
+    WHERE email=?
+    """, (email,))
 
     user = cursor.fetchone()
     conn.close()
