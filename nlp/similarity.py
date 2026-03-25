@@ -75,6 +75,31 @@ def calculate_marks(model_answer, student_answer, total_marks):
             "concept_coverage": "0/0", "is_llm": False, 
             "explanation": "No valid answer provided or OCR completely failed."
         }
+
+    # --------------------------------------
+    # 1.5 OCR Contextual Spell-Check (Repairs garbled text)
+    # --------------------------------------
+    # OCR creates nonsense words. We use the teacher's model answer as a dictionary
+    # to "snap" garbled student words back to the correct spelling.
+    import difflib
+    
+    # Get teacher's vocabulary (only words 4+ chars to avoid snapping 'is' to 'it')
+    model_vocab = [w for w in preprocess(model_answer).split() if len(w) > 3]
+    
+    corrected_student = []
+    for word in student_answer.split():
+        clean_w = preprocess(word)
+        if len(clean_w) > 3 and clean_w not in model_vocab:
+            # Snap to teacher's vocabulary with a forgiving OCR cutoff (55% similarity)
+            # This fixes 'leoYning' -> 'learning' and 'pgepIocessinq' -> 'preprocessing'
+            matches = difflib.get_close_matches(clean_w, model_vocab, n=1, cutoff=0.55)
+            if matches:
+                 corrected_student.append(matches[0])
+                 continue
+        corrected_student.append(word)
+        
+    # Reassemble the student answer with fixed OCR typos
+    student_answer = " ".join(corrected_student)
         
     # --------------------------------------
     # 2. Extract Key Concepts from Model
@@ -119,13 +144,27 @@ def calculate_marks(model_answer, student_answer, total_marks):
     final_semantic = max(semantic_score, overall_sim)
 
     # --------------------------------------
-    # 4. Strict Keyword Matching
+    # 4. Fuzzy Keyword Matching (OCR Resilient)
     # --------------------------------------
+    import difflib
+    
     model_words = preprocess(model_answer).split()
     student_clean = preprocess(student_answer)
+    student_words = student_clean.split()
     unique_keywords = list(set(model_words))
     
-    matched_keywords = sum(1 for word in unique_keywords if f" {word} " in f" {student_clean} ")
+    matched_keywords = 0
+    for expected_word in unique_keywords:
+        # 1. Try exact match first
+        if f" {expected_word} " in f" {student_clean} ":
+            matched_keywords += 1
+        else:
+            # 2. Try fuzzy match for OCR typos (e.g. 'learning' -> 'leoYning')
+            # cutoff=0.72 allows 1-2 character OCR mistakes per word
+            matches = difflib.get_close_matches(expected_word, student_words, n=1, cutoff=0.72)
+            if matches:
+                matched_keywords += 1
+
     keyword_score = matched_keywords / len(unique_keywords) if unique_keywords else 1.0
 
     # --------------------------------------
