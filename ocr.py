@@ -3,42 +3,62 @@ import tempfile
 import numpy as np
 import cv2
 
-# Initialize the PaddleOCR reader (loads models into memory)
-# using 'en' for English characters
+# OCR Engine Initializers
+ocr_paddle = None
+ocr_easy = None
+
+# 1. Try PaddleOCR first
 try:
     from paddleocr import PaddleOCR
-    # cls=True helps with detecting text orientation
-    ocr = PaddleOCR(use_angle_cls=True, lang='en', show_log=False)
+    ocr_paddle = PaddleOCR(use_angle_cls=True, lang='en', show_log=False)
 except ImportError:
-    print("Warning: PaddleOCR not installed. Run: pip install paddlepaddle paddleocr")
-    ocr = None
+    print("Warning: PaddleOCR not installed. Attempting EasyOCR fallback...")
+
+# 2. Try EasyOCR second
+try:
+    import easyocr
+    ocr_easy = easyocr.Reader(['en'], gpu=False) # GPU=False for better compatibility in CPU environments
+except ImportError:
+    print("Error: Neither PaddleOCR nor EasyOCR are installed.")
 
 
 def extract_text_from_image(img_input) -> str:
     """
-    Extracts text from a single image using PaddleOCR.
+    Extracts text from a single image using PaddleOCR (preferred) or EasyOCR (fallback).
     """
-    if ocr is None:
-        return "Error: PaddleOCR is not installed"
+    if ocr_paddle is None and ocr_easy is None:
+        return "Error: No OCR engine installed"
 
     if isinstance(img_input, str):
         img = cv2.imread(img_input)
     else:
         img = img_input
 
-    # PaddleOCR inference
-    # cls=True turns on the angle classifier
-    results = ocr.ocr(img, cls=True)
-    
-    extracted_text = []
-    # results[0] contains the actual bounds and texts if any text was found
-    if results and results[0]:
-        for line in results[0]:
-            # line structure: [[[x1, y1], [x2, y2], [x3, y3], [x4, y4]], ('text', confidence)]
-            text = line[1][0]
-            extracted_text.append(text)
-            
-    return "\n".join(extracted_text)
+    # Try PaddleOCR
+    if ocr_paddle:
+        try:
+            results = ocr_paddle.ocr(img, cls=True)
+            extracted_text = []
+            if results and results[0]:
+                for line in results[0]:
+                    text = line[1][0]
+                    extracted_text.append(text)
+                return "\n".join(extracted_text)
+        except Exception as e:
+            print(f"PaddleOCR error: {e}. Falling back to EasyOCR...")
+
+    # Fallback to EasyOCR
+    if ocr_easy:
+        try:
+            # EasyOCR expects a filepath or numpy array
+            results = ocr_easy.readtext(img)
+            # result structure: ([[x,y],[x,y],[x,y],[x,y]], "text", 0.99)
+            extracted_text = [res[1] for res in results]
+            return "\n".join(extracted_text)
+        except Exception as e:
+            return f"Error: OCR failed. {e}"
+
+    return "Error: All OCR engines failed"
 
 def extract_text_from_pdf(pdf_path: str) -> str:
     """
@@ -64,12 +84,33 @@ def extract_text_from_pdf(pdf_path: str) -> str:
     # 2. Fallback to PaddleOCR (Requires Poppler)
     try:
         from pdf2image import convert_from_path
+        import shutil
+
+        # Check if pdftoppm is in PATH or try common locations
+        poppler_bin = None
+        if shutil.which("pdftoppm"):
+            poppler_bin = None # It's in system PATH
+        else:
+            # Check a few common dev paths just in case, but don't crash if missing
+            potential_paths = [
+                r"C:\poppler\bin",
+                r"C:\Program Files\poppler\bin",
+                r"C:\Users\HP\poppler\Library\bin" # Example user path
+            ]
+            for p in potential_paths:
+                if os.path.exists(os.path.join(p, "pdftoppm.exe")):
+                    poppler_bin = p
+                    break
+        
         images = convert_from_path(
             pdf_path,
-            poppler_path=r"C:\poppler-25.12.0\Library\bin"
+            poppler_path=poppler_bin
         )
     except Exception as e:
-        print(f"Error converting PDF to images (ensure Poppler is installed): {e}")
+        print(f"!!! OCR ERROR: PDF-to-Image conversion failed. !!!")
+        print(f"Reason: {e}")
+        print("Note: To process scanned PDFs, you must install Poppler.")
+        print("Download from: https://github.com/oschwartz10612/poppler-windows/releases")
         return ""
 
     for i, img in enumerate(images):

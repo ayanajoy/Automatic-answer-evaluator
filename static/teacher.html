@@ -211,7 +211,7 @@
                 <div class="nav-item active" onclick="switchTab('overview', this)"><span>🏛️</span> Overview</div>
                 <div class="nav-item" id="nav-registry" onclick="switchTab('papers-section', this)"><span>📂</span> Paper Registry</div>
                 <div class="nav-item" id="nav-upload" onclick="switchTab('upload-section', this)"><span>📝</span> Initialize Assessment</div>
-                <div class="nav-item" id="nav-results" onclick="switchTab('results-section', this)"><span>📊</span> Results Dashboard</div>
+                <div class="nav-item" id="nav-results" onclick="switchTab('results-section', this); loadGlobalResults();"><span>📊</span> Results Dashboard</div>
             </nav>
 
             <div class="sidebar-card">
@@ -316,11 +316,19 @@
 
             <section id="results-section" class="tab-section">
                 <div class="page-header" style="display: flex; justify-content: space-between; align-items: flex-end;">
-                    <div>
+                    <div style="flex-grow: 1;">
                         <h1>Results Dashboard</h1>
-                        <p id="resultsPaperLabel" style="color: var(--secondary); margin-top: 4px;">Select a paper from the registry to view results.</p>
+                        <p id="resultsPaperLabel" style="color: var(--secondary); margin-top: 4px;">Viewing global institutional activity.</p>
                     </div>
-                    <button class="secondary-btn" onclick="document.getElementById('nav-registry').click()">← Back to Registry</button>
+                    <div style="display: flex; gap: 12px; align-items: center;">
+                        <div style="text-align: right;">
+                            <label style="font-size: 0.65rem; font-weight: 800; color: var(--secondary); text-transform: uppercase;">Filter by Paper</label>
+                            <select id="dashboardPaperSelect" style="padding: 8px 12px; font-size: 0.85rem; width: 220px;" onchange="if(this.value) openResults(this.value, this.options[this.selectedIndex].text)">
+                                <option value="">— Select Paper —</option>
+                            </select>
+                        </div>
+                        <button class="secondary-btn" onclick="document.getElementById('nav-registry').click()">← Back to Registry</button>
+                    </div>
                 </div>
 
                 <!-- Empty State -->
@@ -470,11 +478,19 @@
             const response = await fetch("/teacher/papers", { headers: {"Authorization": "Bearer " + token} });
             const papers = await response.json();
             const body = document.getElementById("papersBody");
+            const select = document.getElementById("dashboardPaperSelect");
             if (!body) return;
             body.innerHTML = "";
+            if (select) select.innerHTML = '<option value="">— Select Paper —</option>';
             document.getElementById("statCount").innerText = papers.length;
             
             for (const paper of papers) {
+                if (select) {
+                    const opt = document.createElement("option");
+                    opt.value = paper[0];
+                    opt.text = `${paper[1]} — ${paper[2]}`;
+                    select.appendChild(opt);
+                }
                 // Indices: 0:id, 1:subject, 2:exam_title, 3:total_marks, 4:file, 5:created, 6:has_scheme
                 const hasScheme = paper[6]; 
                 body.innerHTML += `<tr>
@@ -537,8 +553,12 @@
     window.onload = loadPapers;
 
     async function openResults(paperId, title) {
-        document.getElementById('nav-results').click();
+        document.getElementById('nav-results').classList.add('active'); // Highlight sidebar
+        switchTab('results-section', document.getElementById('nav-results'));
         document.getElementById('resultsPaperLabel').innerText = title;
+        
+        const select = document.getElementById("dashboardPaperSelect");
+        if(select) select.value = paperId;
 
         const token = localStorage.getItem("access_token");
         const subRes = await fetch(`/teacher/submissions/${paperId}`, { headers: {"Authorization": "Bearer " + token} });
@@ -674,6 +694,54 @@
 
     function closeAnswerModal() {
         document.getElementById('answerSheetModal').classList.remove('show');
+    }
+    async function loadGlobalResults() {
+        // Reset label
+        document.getElementById('resultsPaperLabel').innerText = "Viewing global institutional activity.";
+        const select = document.getElementById("dashboardPaperSelect");
+        if(select) select.value = "";
+
+        const token = localStorage.getItem("access_token");
+        const res = await fetch("/teacher/all-submissions", { headers: {"Authorization": "Bearer " + token} });
+        const submissions = await res.json();
+
+        const body = document.getElementById('resultsBody');
+        body.innerHTML = '';
+
+        if (!submissions || submissions.length === 0) {
+            document.getElementById('results-empty').style.display = 'block';
+            document.getElementById('results-content').style.display = 'none';
+            return;
+        }
+
+        document.getElementById('results-empty').style.display = 'none';
+        document.getElementById('results-content').style.display = 'block';
+
+        // Global stats are less specific, but we can show counts
+        document.getElementById('statSubmissions').innerText = submissions.length;
+        document.getElementById('statAverage').innerText = "—";
+        document.getElementById('statHighest').innerText = "—";
+
+        // Render global list (no grouping by session for simple list)
+        submissions.forEach(s => {
+            // s indices: 0:id, 1:student_name, 2:paper_title, 3:qNo, 4:sim, 5:marks, 6:date
+            const d = new Date(s[6]);
+            const dateStr = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) + ', ' + d.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+
+            body.innerHTML += `
+            <tr>
+                <td style="font-weight: 800; color: var(--primary);">${s[1]}</td>
+                <td style="color: var(--secondary); font-size: 0.85rem; font-weight: 500;">${dateStr}</td>
+                <td><strong style="font-size: 1.1rem; color: var(--text-header);">${parseFloat(s[5] || 0).toFixed(1)}</strong> <span style="color:var(--secondary); font-size:0.75rem;">(Q${s[3]})</span></td>
+                <td style="color: var(--secondary); font-size: 0.85rem;">${s[2]}</td>
+                <td>
+                   <span class="badge" style="background:var(--primary-soft); color:var(--primary); font-size: 0.6rem;">Global ID #${s[0]}</span>
+                </td>
+                <td>
+                    <button class="secondary-btn btn-mini" style="color: var(--accent); white-space: nowrap;" onclick="alert('Viewing specific question details in Global View is coming soon. Use Paper Registry for full session views.')">Details</button>
+                </td>
+            </tr>`;
+        });
     }
 </script>
 </body>

@@ -48,3 +48,8 @@ app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 @app.get("/")
 def home():
     return FileResponse("static/index.html")
+
+if __name__ == "__main__":
+    import uvicorn
+    # Use standard host/port for local development
+    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)

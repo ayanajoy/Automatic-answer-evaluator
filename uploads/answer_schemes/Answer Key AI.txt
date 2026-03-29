@@ -1,0 +1,9 @@
+Q1|10:Machine Learning is a field of Artificial Intelligence that enables systems to learn from data and improve performance without explicit programming. It includes supervised, unsupervised and reinforcement learning techniques.
+
+Q2|10:Supervised learning uses labeled data to train models. It includes classification and regression. The model learns a mapping from input to output based on examples.
+
+Q3|10:Unsupervised learning works with unlabeled data to find hidden patterns. Common techniques include clustering and association rule mining.
+
+Q4|10:Natural Language Processing (NLP) is a branch of AI that enables machines to understand and process human language. Applications include chatbots, translation, sentiment analysis, and speech recognition.
+
+Q5|10:Data preprocessing involves cleaning and transforming raw data before training models. Steps include handling missing values, normalization, encoding categorical data, and removing noise.

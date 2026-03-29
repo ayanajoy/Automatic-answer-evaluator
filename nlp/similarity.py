@@ -1,12 +1,23 @@
+import os
+import logging
+import warnings
+
+# ==========================================
+# Suppress Loud Library Warnings (MUST BE TOP)
+# ==========================================
+os.environ["TRANSFORMERS_VERBOSITY"] = "error"
+os.environ["HF_HUB_DISABLE_SYMLINKS_WARNING"] = "1"
+logging.getLogger("huggingface_hub").setLevel(logging.ERROR)
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("sentence_transformers").setLevel(logging.WARNING)
+warnings.filterwarnings("ignore", category=FutureWarning)
+
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
 import re
 import nltk
 from .preprocess import preprocess
-
-import os
-import logging
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -35,8 +46,11 @@ except Exception as e:
             "Check your connection or DNS settings. Once downloaded, the app can run offline."
         ) from e_offline
 
-# Ensure tokenizer available
-nltk.download('punkt', quiet=True)
+# Ensure tokenizer available (Silently)
+try:
+    nltk.data.find('tokenizers/punkt')
+except LookupError:
+    nltk.download('punkt', quiet=True)
 
 # ==========================================
 # Split sentences properly using NLTK
