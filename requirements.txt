@@ -16,3 +16,4 @@ python-jose[cryptography]
 passlib[bcrypt]
 opencv-python
 paddleocr
+python-bidi==0.4.2
