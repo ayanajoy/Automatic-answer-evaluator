@@ -15,5 +15,4 @@ pdf2image
 python-jose[cryptography]
 passlib[bcrypt]
 opencv-python
-paddlepaddle
 paddleocr
